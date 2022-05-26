@@ -126,7 +126,7 @@ static void main_task(void *pvParameters) {
 
   // // Initialising radio
   // testSupportPrintStart("Initialize UWB ");
-  // uwbInit();
+  uwbInit();
   // if (uwbTest()) {
   //   printf("[OK]\r\n");
   // } else {
@@ -165,9 +165,9 @@ static void main_task(void *pvParameters) {
 
   HAL_Delay(500);
 
-  ledOff(ledRanging);
-  ledOff(ledSync);
-  ledOff(ledMode);
+  // ledOff(ledRanging);
+  // ledOff(ledSync);
+  // ledOff(ledMode);
 
   // printf("SYSTEM\t: Node started ...\r\n");
   // printf("SYSTEM\t: Press 'h' for help.\r\n");

@@ -53,6 +53,11 @@ OBJS+=vendor/libdw1000/src/libdw1000.o vendor/libdw1000/src/libdw1000Spi.o
 
 OBJS+=src/dwOps.o
 
+#libdw3000
+INCLUDES+=-Isrc/decadriver -Isrc/platform -Iconfig_options.h
+OBJS+=src/decadriver/deca_device.o src/platform/deca_mutex.o src/platform/deca_sleep.o src/platform/deca_spi.o src/platform/port.o src/config_options.o
+
+
 CFLAGS+=$(PROCESSOR) $(INCLUDES) -O3 -g3 -Wall -Wno-pointer-sign -std=gnu11
 LDFLAGS+=$(PROCESSOR) --specs=nano.specs --specs=nosys.specs -lm -lc -u _printf_float
 

@@ -24,11 +24,11 @@
  */
 /* uwb.c: Uwb radio implementation, low level handling */
 
+#include <libdw1000.h>
 #include <stm32f0xx_hal.h>
 
 #include "uwb.h"
 
-#include "libdw1000.h"
 #include "dwOps.h"
 
 #include <FreeRTOS.h>
@@ -93,91 +93,91 @@ static void rxfailedcallback(dwDevice_t *dev) {
 void uwbInit()
 {
   // Initializing the low level radio handling
-  static StaticSemaphore_t irqSemaphoreBuffer;
-  irqSemaphore = xSemaphoreCreateBinaryStatic(&irqSemaphoreBuffer);
+  // static StaticSemaphore_t irqSemaphoreBuffer;
+  // irqSemaphore = xSemaphoreCreateBinaryStatic(&irqSemaphoreBuffer);
 
   dwInit(dwm, &dwOps);       // Init libdw
   dwOpsInit(dwm);
   uwbErrorCode = dwConfigure(dwm); // Configure the dw1000 chip
-  if (uwbErrorCode == 0) {
-    dwEnableAllLeds(dwm);
-  } else {
-    return;
-  }
-  dwTime_t delay = {.full = 0};
-  dwSetAntenaDelay(dwm, delay);
+  // if (uwbErrorCode == 0) {
+  //   dwEnableAllLeds(dwm);
+  // } else {
+  //   return;
+  // }
+  // dwTime_t delay = {.full = 0};
+  // dwSetAntenaDelay(dwm, delay);
 
-  // Reading and setting node configuration
-  cfgReadU8(cfgAddress, &config.address[0]);
-  cfgReadU8(cfgMode, &config.mode);
-  cfgFieldSize(cfgAnchorlist, &config.anchorListSize);
-  if (config.anchorListSize <= MAX_ANCHORS) {
-    cfgReadU8list(cfgAnchorlist, config.anchors, config.anchorListSize);
-  }
+  // // Reading and setting node configuration
+  // cfgReadU8(cfgAddress, &config.address[0]);
+  // cfgReadU8(cfgMode, &config.mode);
+  // cfgFieldSize(cfgAnchorlist, &config.anchorListSize);
+  // if (config.anchorListSize <= MAX_ANCHORS) {
+  //   cfgReadU8list(cfgAnchorlist, config.anchors, config.anchorListSize);
+  // }
 
-  if (config.mode < uwbAlgorithmCount()) {
-    algorithm = availableAlgorithms[config.mode].algorithm;
-  } else {
-    algorithm = &dummyAlgorithm;
-  }
+  // if (config.mode < uwbAlgorithmCount()) {
+  //   algorithm = availableAlgorithms[config.mode].algorithm;
+  // } else {
+  //   algorithm = &dummyAlgorithm;
+  // }
 
-  config.positionEnabled = cfgReadFP32list(cfgAnchorPos, config.position, 3);
+  // config.positionEnabled = cfgReadFP32list(cfgAnchorPos, config.position, 3);
 
-  dwAttachSentHandler(dwm, txcallback);
-  dwAttachReceivedHandler(dwm, rxcallback);
-  dwAttachReceiveTimeoutHandler(dwm, rxTimeoutCallback);
-  dwAttachReceiveFailedHandler(dwm, rxfailedcallback);
+   dwAttachSentHandler(dwm, txcallback);
+  // dwAttachReceivedHandler(dwm, rxcallback);
+  // dwAttachReceiveTimeoutHandler(dwm, rxTimeoutCallback);
+  // dwAttachReceiveFailedHandler(dwm, rxfailedcallback);
 
-  dwNewConfiguration(dwm);
-  dwSetDefaults(dwm);
+  // dwNewConfiguration(dwm);
+  // dwSetDefaults(dwm);
 
-  uint8_t useLowBitrate = 0;
-  cfgReadU8(cfgLowBitrate, &useLowBitrate);
-  #ifdef LPS_LONGER_RANGE
-  useLowBitrate = 1;
-  #endif
-  config.lowBitrate = (useLowBitrate == 1);
+  // uint8_t useLowBitrate = 0;
+  // cfgReadU8(cfgLowBitrate, &useLowBitrate);
+  // #ifdef LPS_LONGER_RANGE
+  // useLowBitrate = 1;
+  // #endif
+  // config.lowBitrate = (useLowBitrate == 1);
 
-  uint8_t useLongPreamble = 0;
-  cfgReadU8(cfgLongPreamble, &useLongPreamble);
-  config.longPreamble = (useLongPreamble == 1);
+  // uint8_t useLongPreamble = 0;
+  // cfgReadU8(cfgLongPreamble, &useLongPreamble);
+  // config.longPreamble = (useLongPreamble == 1);
 
-  const uint8_t* mode = MODE_SHORTDATA_FAST_ACCURACY;
-  if (useLowBitrate && !useLongPreamble) {
-    mode = MODE_SHORTDATA_MID_ACCURACY;
-  } else if (!useLowBitrate && useLongPreamble) {
-    mode = MODE_LONGDATA_FAST_ACCURACY;
-  } else if (useLowBitrate && useLongPreamble) {
-    mode = MODE_LONGDATA_MID_ACCURACY;
-  }
-  dwEnableMode(dwm, mode);
+  // const uint8_t* mode = MODE_SHORTDATA_FAST_ACCURACY;
+  // if (useLowBitrate && !useLongPreamble) {
+  //   mode = MODE_SHORTDATA_MID_ACCURACY;
+  // } else if (!useLowBitrate && useLongPreamble) {
+  //   mode = MODE_LONGDATA_FAST_ACCURACY;
+  // } else if (useLowBitrate && useLongPreamble) {
+  //   mode = MODE_LONGDATA_MID_ACCURACY;
+  // }
+  // dwEnableMode(dwm, mode);
 
-  dwSetChannel(dwm, CHANNEL_2);
+  // dwSetChannel(dwm, CHANNEL_2);
 
-  // Enable smart power by default
-  uint8_t enableSmartPower = 1;
-  cfgReadU8(cfgSmartPower, &enableSmartPower);
-  config.smartPower = enableSmartPower != 0;
-  if (enableSmartPower) {
-    dwUseSmartPower(dwm, true);
-  }
+  // // Enable smart power by default
+  // uint8_t enableSmartPower = 1;
+  // cfgReadU8(cfgSmartPower, &enableSmartPower);
+  // config.smartPower = enableSmartPower != 0;
+  // if (enableSmartPower) {
+  //   dwUseSmartPower(dwm, true);
+  // }
 
-  // Do not force power by default
-  uint8_t forceTxPower = 0;
-  cfgReadU8(cfgForceTxPower, &forceTxPower);
-  config.forceTxPower = forceTxPower != 0;
-  if (forceTxPower) {
-    uint32_t txPower = 0x1F1F1F1Ful;
-    cfgReadU32(cfgTxPower, &txPower);
-    config.txPower = txPower;
-    dwSetTxPower(dwm, txPower);
-  }
+  // // Do not force power by default
+  // uint8_t forceTxPower = 0;
+  // cfgReadU8(cfgForceTxPower, &forceTxPower);
+  // config.forceTxPower = forceTxPower != 0;
+  // if (forceTxPower) {
+  //   uint32_t txPower = 0x1F1F1F1Ful;
+  //   cfgReadU32(cfgTxPower, &txPower);
+  //   config.txPower = txPower;
+  //   dwSetTxPower(dwm, txPower);
+  // }
 
-  dwSetPreambleCode(dwm, PREAMBLE_CODE_64MHZ_9);
+  // dwSetPreambleCode(dwm, PREAMBLE_CODE_64MHZ_9);
 
-  dwCommitConfiguration(dwm);
+  // dwCommitConfiguration(dwm);
 
-  isInit = true;
+  // isInit = true;
 }
 
 bool uwbTest()

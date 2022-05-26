@@ -1,7 +1,6 @@
 #ifndef __PORT_H__
 #define __PORT_H__
 
-#include "compiler.h"
 #include "deca_device_api.h"
 
 #ifdef STM32F103xB
@@ -9,12 +8,6 @@
 #else
 #include <stm32f0xx_hal.h>
 #endif
-
-int writetospi(uint16 headerLength, const uint8 *headerBuffer,
-                             uint32 bodylength, const uint8 *bodyBuffer);
-
-int readfromspi(uint16 headerLength,  const uint8 *headerBuffer,
-                              uint32 readlength, uint8 *readBuffer);
 
 decaIrqStatus_t decamutexon(void);
 
