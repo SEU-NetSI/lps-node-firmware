@@ -98,7 +98,9 @@ void uwbInit()
 
   dwInit(dwm, &dwOps);       // Init libdw
   dwOpsInit(dwm);
-  uwbErrorCode = dwConfigure(dwm); // Configure the dw1000 chip
+  //uwbErrorCode = dwConfigure(dwm); // Configure the dw1000 chip
+	uint32_t id = dwGetDeviceId(dwm);
+	printf("==============ID:%08x\n", id);
   // if (uwbErrorCode == 0) {
   //   dwEnableAllLeds(dwm);
   // } else {
