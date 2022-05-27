@@ -30,6 +30,7 @@
 #include "uwb.h"
 
 #include "dwOps.h"
+#include "deca_device_api.h"
 
 #include <FreeRTOS.h>
 #include <semphr.h>
@@ -98,8 +99,9 @@ void uwbInit()
 
   dwInit(dwm, &dwOps);       // Init libdw
   dwOpsInit(dwm);
+  dwt_setleds(3);
   //uwbErrorCode = dwConfigure(dwm); // Configure the dw1000 chip
-	uint32_t id = dwGetDeviceId(dwm);
+	uint32_t id = dwt_readdevid();
 	printf("==============ID:%08x\n", id);
   // if (uwbErrorCode == 0) {
   //   dwEnableAllLeds(dwm);
