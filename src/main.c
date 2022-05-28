@@ -506,32 +506,32 @@ static void changePower(uint8_t power) { //expects [0, POWER_LEVELS-1] interval
 
 static void printModeList()
 {
-  unsigned int count = uwbAlgorithmCount();
-  int current_mode = -1;
-  uint8_t mode;
+  // unsigned int count = uwbAlgorithmCount();
+  // int current_mode = -1;
+  // uint8_t mode;
 
-  if (cfgReadU8(cfgMode, &mode)) {
-    current_mode = mode;
-  }
+  // if (cfgReadU8(cfgMode, &mode)) {
+  //   current_mode = mode;
+  // }
 
-  printf("-------------------\r\n");
-  printf("Available UWB modes:\r\n");
-  for (int i=0; i<count; i++) {
-    printf(" %d - %s%s\r\n", i, uwbAlgorithmName(i),
-                             (i == current_mode)?" (Current mode)":"");
-  }
+  // printf("-------------------\r\n");
+  // printf("Available UWB modes:\r\n");
+  // for (int i=0; i<count; i++) {
+  //   printf(" %d - %s%s\r\n", i, uwbAlgorithmName(i),
+  //                            (i == current_mode)?" (Current mode)":"");
+  // }
 }
 
 static void printMode() {
-  uint8_t mode;
+//   uint8_t mode;
 
-  if (cfgReadU8(cfgMode, &mode)) {
-    printf(uwbAlgorithmName(mode));
-  } else {
-    printf("Not found!");
-  }
+//   if (cfgReadU8(cfgMode, &mode)) {
+//     printf(uwbAlgorithmName(mode));
+//   } else {
+//     printf("Not found!");
+//   }
 
-  printf("\r\n");
+//   printf("\r\n");
 }
 
 static void changeRadioMode(unsigned int newMode) {

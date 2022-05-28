@@ -30,7 +30,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "cfg.h"
-#include <libdw1000.h>
 
 #define MAX_ANCHORS 6
 
@@ -64,22 +63,9 @@ typedef enum uwbEvent_e {
   eventReceiveFailed,
 } uwbEvent_t;
 
-// Callback for one uwb algorithm
-typedef struct uwbAlgorithm_s {
-  void (*init)(uwbConfig_t * config, dwDevice_t *dev);
-  uint32_t (*onEvent)(dwDevice_t *dev, uwbEvent_t event);
-} uwbAlgorithm_t;
-
 #include <FreeRTOS.h>
 
 #define MAX_TIMEOUT portMAX_DELAY
 
-void uwbInit();
-bool uwbTest();
-void uwbStart();
-char * uwbStrError();
-struct uwbConfig_s * uwbGetConfig();
-int uwbAlgorithmCount();
-char * uwbAlgorithmName(unsigned int id);
 
 #endif //__UWB_H__

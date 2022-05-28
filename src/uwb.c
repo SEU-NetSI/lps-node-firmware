@@ -24,73 +24,16 @@
  */
 /* uwb.c: Uwb radio implementation, low level handling */
 
-#include <libdw1000.h>
 #include <stm32f0xx_hal.h>
 
 #include "uwb.h"
 
 #include "dwOps.h"
 #include "deca_device_api.h"
-#include "examples_defines.h"
-
 
 #include <FreeRTOS.h>
 #include <semphr.h>
 #include <task.h>
-
-// Implemented UWB algoritm. The dummy one is at the end of this file.
-static uwbAlgorithm_t dummyAlgorithm;
-extern uwbAlgorithm_t uwbTwrAnchorAlgorithm;
-extern uwbAlgorithm_t uwbTwrTagAlgorithm;
-extern uwbAlgorithm_t uwbSnifferAlgorithm;
-extern uwbAlgorithm_t uwbTdoaAlgorithm;
-extern uwbAlgorithm_t uwbTdoa2Algorithm;
-extern uwbAlgorithm_t uwbTdoa3Algorithm;
-static uwbAlgorithm_t *algorithm = &dummyAlgorithm;
-
-struct {
-  uwbAlgorithm_t *algorithm;
-  char *name;
-} availableAlgorithms[] = {
-  {.algorithm = &uwbTwrAnchorAlgorithm, .name = "TWR Anchor"},
-  {.algorithm = &uwbTwrTagAlgorithm,    .name = "TWR Tag"},
-  {.algorithm = &uwbSnifferAlgorithm,   .name = "Sniffer"},
-  {.algorithm = &uwbTdoa2Algorithm,     .name = "TDoA Anchor V2"},
-  {.algorithm = &uwbTdoa3Algorithm,     .name = "TDoA Anchor V3"},
-  {NULL, NULL},
-};
-
-// Low level radio handling context (to be separated)
-static bool isInit = false;
-static int uwbErrorCode = 0;
-static SemaphoreHandle_t irqSemaphore;
-static dwDevice_t dwm_device;
-static dwDevice_t *dwm = &dwm_device;
-
-// System configuration
-static struct uwbConfig_s config = {
-  address: {0,0,0,0,0,0,0xcf,0xbc},
-};
-
-static uint32_t timeout;
-
-static void txcallback(dwDevice_t *dev)
-{
-  timeout = algorithm->onEvent(dev, eventPacketSent);
-}
-
-static void rxcallback(dwDevice_t *dev)
-{
-  timeout = algorithm->onEvent(dev, eventPacketReceived);
-}
-
-static void rxTimeoutCallback(dwDevice_t * dev) {
-  timeout = algorithm->onEvent(dev, eventReceiveTimeout);
-}
-
-static void rxfailedcallback(dwDevice_t *dev) {
-  timeout = algorithm->onEvent(dev, eventReceiveFailed);
-}
 
 // used in the example code
 void test_run_info(unsigned char *data)
@@ -142,8 +85,6 @@ void uwbInit()
   // static StaticSemaphore_t irqSemaphoreBuffer;
   // irqSemaphore = xSemaphoreCreateBinaryStatic(&irqSemaphoreBuffer);
 
-  dwInit(dwm, &dwOps);       // Init libdw
-  dwOpsInit(dwm);
   dwt_setleds(3);
   //uwbErrorCode = dwConfigure(dwm); // Configure the dw1000 chip
 	uint32_t id = dwt_readdevid();
@@ -175,7 +116,7 @@ void uwbInit()
 
   // config.positionEnabled = cfgReadFP32list(cfgAnchorPos, config.position, 3);
 
-   dwAttachSentHandler(dwm, txcallback);
+  // dwAttachSentHandler(dwm, txcallback);
   // dwAttachReceivedHandler(dwm, rxcallback);
   // dwAttachReceiveTimeoutHandler(dwm, rxTimeoutCallback);
   // dwAttachReceiveFailedHandler(dwm, rxfailedcallback);
@@ -232,105 +173,30 @@ void uwbInit()
   // isInit = true;
 }
 
-bool uwbTest()
-{
-  return isInit;
-}
-
-int uwbAlgorithmCount()
-{
-  int count = 0;
-
-  while (availableAlgorithms[count].algorithm != NULL) {
-    count ++;
-  }
-  return count;
-}
-
-char * uwbAlgorithmName(unsigned int id)
-{
-  if (id < uwbAlgorithmCount()) {
-    return availableAlgorithms[id].name;
-  } else {
-    return "UKNOWN";
-  }
-}
-
-static int checkIrq()
-{
-  return HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0);
-}
-
 static void uwbTask(void* parameters)
 {
-  configASSERT(isInit);
-
-  algorithm->init(&config, dwm);
 
   while(1) {
-    if (xSemaphoreTake(irqSemaphore, timeout/portTICK_PERIOD_MS)) {
-      do{
-          dwHandleInterrupt(dwm);
-      } while(checkIrq() != 0);
-    } else {
-      timeout = algorithm->onEvent(dwm, eventTimeout);
-    }
+    vTaskDelay(1000);
   }
 }
 
-void uwbStart()
-{
-  static StaticTask_t uwbStaticTask;
-  static StackType_t uwbStaticStack[2*configMINIMAL_STACK_SIZE];
-
-  if (isInit) {
-    xTaskCreateStatic(uwbTask, "uwb", 2*configMINIMAL_STACK_SIZE, NULL,
-                      configMAX_PRIORITIES - 1, uwbStaticStack, &uwbStaticTask);
-  }
-}
-
-char * uwbStrError()
-{
-  return dwStrError(uwbErrorCode);
-}
-
-struct uwbConfig_s * uwbGetConfig()
-{
-  return &config;
-}
-
-/**** DWM1000 interrupt handling *****/
+/**** DWM3000 interrupt handling *****/
 #define DWM_IRQn EXTI0_1_IRQn
 #define DWM_IRQ_PIN GPIO_PIN_0
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  BaseType_t higherPriorityTaskWoken = pdFALSE;
+  // BaseType_t higherPriorityTaskWoken = pdFALSE;
 
-  switch (GPIO_Pin) {
-    case DWM_IRQ_PIN:
-      xSemaphoreGiveFromISR(irqSemaphore, &higherPriorityTaskWoken);
+  // switch (GPIO_Pin) {
+  //   case DWM_IRQ_PIN:
+  //     xSemaphoreGiveFromISR(irqSemaphore, &higherPriorityTaskWoken);
 
-      HAL_NVIC_ClearPendingIRQ(DWM_IRQn);
-      break;
-    default:
-      break;
-  }
-  portYIELD_FROM_ISR(higherPriorityTaskWoken);
+  //     HAL_NVIC_ClearPendingIRQ(DWM_IRQn);
+  //     break;
+  //   default:
+  //     break;
+  // }
+  // portYIELD_FROM_ISR(higherPriorityTaskWoken);
 }
-
-/* Dummy algorithm (used if UKNOWN algorithm is selected ...)*/
-static void dummyInit(uwbConfig_t * config, dwDevice_t *dev)
-{
-  ;
-}
-
-static uint32_t dummyOnEvent(dwDevice_t *dev, uwbEvent_t event)
-{
-  return MAX_TIMEOUT;
-}
-
-static uwbAlgorithm_t dummyAlgorithm = {
-  .init = dummyInit,
-  .onEvent = dummyOnEvent,
-};

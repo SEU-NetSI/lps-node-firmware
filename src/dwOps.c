@@ -35,13 +35,9 @@ extern SPI_HandleTypeDef hspi1;
 
 #define DWM_IRQn EXTI0_1_IRQn
 
-static dwDevice_t *dev;
-
 // Initialize interrupts
-void dwOpsInit(dwDevice_t *device)
+void dwOpsInit()
 {
-  dev = device;
-
   NVIC_EnableIRQ(DWM_IRQn);
 }
 
@@ -50,7 +46,7 @@ void dwOpsInit(dwDevice_t *device)
 // The problem is that the Cortex-m0 only supports 2Bytes-aligned memory access
 uint16_t alignedBuffer[64];
 
-static void spiWrite(dwDevice_t* dev, const void *header, size_t headerLength,
+static void spiWrite(const void *header, size_t headerLength,
                                       const void* data, size_t dataLength)
 {
 #ifdef DEBUG_SPI
@@ -75,7 +71,7 @@ static void spiWrite(dwDevice_t* dev, const void *header, size_t headerLength,
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 1);
 }
 
-static void spiRead(dwDevice_t* dev, const void *header, size_t headerLength,
+static void spiRead(const void *header, size_t headerLength,
                                      void* data, size_t dataLength)
 {
   // volatile int dummy;
@@ -112,7 +108,7 @@ static void spiRead(dwDevice_t* dev, const void *header, size_t headerLength,
 #endif
 }
 
-static void spiSetSpeed(dwDevice_t* dev, dwSpiSpeed_t speed)
+static void spiSetSpeed(dwSpiSpeed_t speed)
 {
   if(speed == dwSpiSpeedLow) {
     MX_SPI1_Init();
@@ -121,22 +117,14 @@ static void spiSetSpeed(dwDevice_t* dev, dwSpiSpeed_t speed)
   }
 }
 
-static void reset(dwDevice_t* dev)
+static void reset()
 {
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, 0);
   HAL_Delay(2);
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, 1);
 }
 
-static void delayms(dwDevice_t* dev, unsigned int delay)
+static void delayms(unsigned int delay)
 {
   HAL_Delay(delay);
 }
-
-dwOps_t dwOps = {
-  .spiRead = spiRead,
-  .spiWrite = spiWrite,
-  .spiSetSpeed = spiSetSpeed,
-  .delayms = delayms,
-  .reset = reset,
-};

@@ -15,7 +15,6 @@
 #include <deca_device_api.h>
 #include <port.h>
 #include <stm32f0xx_hal.h>
-#include "libdw1000Spi.h"
 
 extern  SPI_HandleTypeDef hspi1;    /*clocked from 72MHz*/
 
@@ -52,7 +51,7 @@ int closespi(void)
 // The problem is that the Cortex-m0 only supports 2Bytes-aligned memory access
 uint16_t alignedBuffer[64];
 
-static void spiWrite(dwDevice_t* dev, const void *header, size_t headerLength,
+static void spiWrite(const void *header, size_t headerLength,
                                       const void* data, size_t dataLength)
 {
 #ifdef DEBUG_SPI
@@ -77,7 +76,7 @@ static void spiWrite(dwDevice_t* dev, const void *header, size_t headerLength,
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 1);
 }
 
-static void spiRead(dwDevice_t* dev, const void *header, size_t headerLength,
+static void spiRead(const void *header, size_t headerLength,
                                      void* data, size_t dataLength)
 {
   // volatile int dummy;
@@ -157,7 +156,7 @@ int writetospi(uint16_t       headerLength,
                uint16_t       bodyLength,
                const uint8_t  *bodyBuffer)
 {
-    spiWrite(NULL, headerBuffer, headerLength, bodyBuffer, bodyLength);
+    spiWrite(headerBuffer, headerLength, bodyBuffer, bodyLength);
     return 0;
     // decaIrqStatus_t  stat ;
     // stat = decamutexon();
@@ -217,7 +216,7 @@ int readfromspi(uint16_t  headerLength,
                 uint16_t  readlength,
                 uint8_t   *readBuffer)
 {
-    spiRead(NULL, headerBuffer, headerLength, readBuffer, readlength);
+    spiRead(headerBuffer, headerLength, readBuffer, readlength);
     return 0;
 //     int i;
 
