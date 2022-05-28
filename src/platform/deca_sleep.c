@@ -17,7 +17,7 @@
 /* Wrapper function to be used by decadriver. Declared in deca_device_api.h */
 void deca_sleep(unsigned int time_ms)
 {
-    Sleep(time_ms);
+    HAL_Delay(time_ms);
 }
 
 

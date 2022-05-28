@@ -31,6 +31,8 @@
 
 #include "dwOps.h"
 #include "deca_device_api.h"
+#include "examples_defines.h"
+
 
 #include <FreeRTOS.h>
 #include <semphr.h>
@@ -90,6 +92,17 @@ static void rxfailedcallback(dwDevice_t *dev) {
   timeout = algorithm->onEvent(dev, eventReceiveFailed);
 }
 
+// used in the example code
+void test_run_info(unsigned char *data)
+{
+    printf("%s\n", data);
+}
+
+void Sleep(unsigned int time_ms)
+{
+    deca_sleep(time_ms);
+}
+
 
 void uwbInit()
 {
@@ -103,6 +116,7 @@ void uwbInit()
   //uwbErrorCode = dwConfigure(dwm); // Configure the dw1000 chip
 	uint32_t id = dwt_readdevid();
 	printf("==============ID:%08x\n", id);
+  build_examples();
   // if (uwbErrorCode == 0) {
   //   dwEnableAllLeds(dwm);
   // } else {
