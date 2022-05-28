@@ -55,7 +55,65 @@ OBJS+=src/dwOps.o
 
 #libdw3000
 INCLUDES+=-Isrc/decadriver -Isrc/platform -Iconfig_options.h
-OBJS+=src/decadriver/deca_device.o src/platform/deca_mutex.o src/platform/deca_sleep.o src/platform/deca_spi.o src/platform/port.o src/config_options.o
+OBJS+=src/decadriver/deca_device.o \
+src/platform/deca_mutex.o \
+src/platform/deca_sleep.o \
+src/platform/deca_spi.o \
+src/platform/port.o \
+src/config_options.o
+
+#libdw3000 examples
+INCLUDES+=-Isrc/examples/examples_info/examples_defines.h \
+-Isrc/examples/shared_data/shared_defines.h  \
+-Isrc/examples/shared_data/shared_functions.h \
+
+OBJS+=src/examples/ex_00a_reading_dev_id/read_dev_id.o \
+src/examples/ex_01a_simple_tx/simple_tx.o \
+src/examples/ex_01b_tx_sleep/tx_sleep.o \
+src/examples/ex_01b_tx_sleep/tx_sleep_idleRC.o \
+src/examples/ex_01c_tx_sleep_auto/tx_sleep_auto.o \
+src/examples/ex_01d_tx_timed_sleep/tx_timed_sleep.o \
+src/examples/ex_01e_tx_with_cca/tx_with_cca.o \
+src/examples/ex_01g_simple_tx_sts_sdc/simple_tx_sts_sdc.o \
+src/examples/ex_01h_simple_tx_pdoa/simple_tx_pdoa.o \
+src/examples/ex_01i_simple_tx_aes/simple_tx_aes.o \
+src/examples/ex_02a_simple_rx/simple_rx.o \
+src/examples/ex_02c_rx_diagnostics/rx_diagnostics.o \
+src/examples/ex_02d_rx_sniff/rx_sniff.o \
+src/examples/ex_02f_rx_with_crystal_trim/rx_with_xtal_trim.o \
+src/examples/ex_02g_simple_rx_sts_sdc/simple_rx_sts_sdc.o \
+src/examples/ex_02h_simple_rx_pdoa/simple_rx_pdoa.o \
+src/examples/ex_02i_simple_rx_aes/simple_rx_aes.o \
+src/examples/ex_03a_tx_wait_resp/tx_wait_resp.o \
+src/examples/ex_03b_rx_send_resp/rx_send_resp.o \
+src/examples/ex_03d_tx_wait_resp_interrupts/tx_wait_resp_int.o \
+src/examples/ex_04a_cont_wave/continuous_wave.o \
+src/examples/ex_04b_cont_frame/continuous_frame.o \
+src/examples/ex_05a_ds_twr_init/ds_twr_initiator.o \
+src/examples/ex_05a_ds_twr_init/ds_twr_initiator_sts.o \
+src/examples/ex_05b_ds_twr_resp/ds_twr_responder.o \
+src/examples/ex_05b_ds_twr_resp/ds_twr_responder_sts.o \
+src/examples/ex_05c_ds_twr_init_sts_sdc/ds_twr_sts_sdc_initiator.o \
+src/examples/ex_05d_ds_twr_resp_sts_sdc/ds_twr_sts_sdc_responder.o \
+src/examples/ex_06a_ss_twr_initiator/ss_twr_initiator.o \
+src/examples/ex_06a_ss_twr_initiator/ss_twr_initiator_sts.o \
+src/examples/ex_06a_ss_twr_initiator/ss_twr_initiator_sts_no_data.o \
+src/examples/ex_06b_ss_twr_responder/ss_twr_responder.o \
+src/examples/ex_06b_ss_twr_responder/ss_twr_responder_sts.o \
+src/examples/ex_06b_ss_twr_responder/ss_twr_responder_sts_no_data.o \
+src/examples/ex_06e_AES_ss_twr_initiator/ss_aes_twr_initiator.o \
+src/examples/ex_06f_AES_ss_twr_responder/ss_aes_twr_responder.o \
+src/examples/ex_07a_ack_data_tx/ack_data_tx.o \
+src/examples/ex_07b_ack_data_rx/ack_data_rx.o \
+src/examples/ex_07c_ack_data_rx_dbl_buff/ack_data_rx_dbl_buff.o \
+src/examples/ex_11a_spi_crc/spi_crc.o \
+src/examples/ex_13a_gpio/gpio_example.o \
+src/examples/ex_14_otp_write/otp_write.o \
+src/examples/ex_15_le_pend/le_pend_rx.o \
+src/examples/ex_15_le_pend/le_pend_tx.o \
+src/examples/examples_info/example_info.o \
+src/examples/shared_data/shared_functions.o \
+
 
 
 CFLAGS+=$(PROCESSOR) $(INCLUDES) -O3 -g3 -Wall -Wno-pointer-sign -std=gnu11
