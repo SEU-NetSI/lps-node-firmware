@@ -174,11 +174,18 @@ void uwbInit()
   // isInit = true;
 }
 
-static void uwbTask(void* parameters)
+void uwbTask(void* parameters)
 {
+	uint32_t id = dwt_readdevid();
+	printf("==============ID:%08x\r\n", id);
 
+  build_examples();
+  example_pointer();
+
+  uint32_t i = 0;
   while(1) {
     vTaskDelay(1000);
+    printf("i=%03ld\r\n", i++);
   }
 }
 

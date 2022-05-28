@@ -77,6 +77,9 @@ typedef struct {
   unsigned int tempId;
 } MenuState;
 
+static StaticTask_t xUWBTask;
+static StackType_t ucUWBStack[configMINIMAL_STACK_SIZE];
+
 static void main_task(void *pvParameters) {
   int i;
   char ch;
@@ -124,15 +127,8 @@ static void main_task(void *pvParameters) {
 
   cfgInit();
 
-  // // Initialising radio
-  // testSupportPrintStart("Initialize UWB ");
-  uwbInit();
-  // if (uwbTest()) {
-  //   printf("[OK]\r\n");
-  // } else {
-  //   printf("[ERROR]: %s\r\n", uwbStrError());
-  //   selftestPasses = false;
-  // }
+  xTaskCreateStatic( uwbTask, "uwbTask", configMINIMAL_STACK_SIZE, NULL, configMAX_PRIORITIES - 3, ucUWBStack, &xUWBTask );
+  
 
   // if (!selftestPasses) {
   //   printf("TEST\t: One or more self-tests failed, blocking startup!\r\n");
@@ -179,12 +175,11 @@ static void main_task(void *pvParameters) {
 
   // Main loop ...
   while(1) {
-    printf("GreedIsGood\n");
     usbcommPrintWelcomeMessage();
 
     ledTick();
     handleButton();
-    vTaskDelay(1000);
+    vTaskDelay(100);
     // // Measure pressure
     // if (uwbConfig.mode != modeSniffer) {
     //   if(lps25hGetData(&pressure, &temperature, &asl)) {

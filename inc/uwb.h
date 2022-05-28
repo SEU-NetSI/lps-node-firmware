@@ -67,5 +67,6 @@ typedef enum uwbEvent_e {
 
 #define MAX_TIMEOUT portMAX_DELAY
 
+void uwbTask(void* parameters);
 
 #endif //__UWB_H__

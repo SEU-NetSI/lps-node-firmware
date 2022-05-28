@@ -2,6 +2,8 @@
     "files.associations": {
         "libdw1000spi.h": "c",
         "stm32f0xx_hal.h": "c",
-        "examples_defines.h": "c"
+        "examples_defines.h": "c",
+        "task.h": "c",
+        "cstdio": "c"
     }
 }
