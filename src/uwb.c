@@ -102,6 +102,38 @@ void Sleep(unsigned int time_ms)
 {
     deca_sleep(time_ms);
 }
+/* Example application name and version to display on LCD screen/VCOM port. */
+#define APP_NAME "READ DEV ID      "
+
+/**
+ * Application entry point.
+ */
+int my_read_dev_id(void)
+{
+    int err;
+    /* Display application name on LCD. */
+    test_run_info((unsigned char *)APP_NAME);
+
+    /* Configure SPI rate, DW3000 supports up to 38 MHz */
+    //port_set_dw_ic_spi_fastrate();
+
+    /* Reset DW IC */
+    // reset_DWIC(); /* Target specific drive of RSTn line into DW IC low for a period. */
+
+    Sleep(2); // Time needed for DW3000 to start up (transition from INIT_RC to IDLE_RC, or could wait for SPIRDY event)
+
+    /* Reads and validate device ID returns DWT_ERROR if it does not match expected else DWT_SUCCESS */
+    if ((err=dwt_check_dev_id())==DWT_SUCCESS)
+    {
+        test_run_info((unsigned char *)"DEV ID OK");
+    }
+    else
+    {
+    	test_run_info((unsigned char *)"DEV ID FAILED");
+    }
+
+    return err;
+}
 
 
 void uwbInit()
@@ -116,7 +148,9 @@ void uwbInit()
   //uwbErrorCode = dwConfigure(dwm); // Configure the dw1000 chip
 	uint32_t id = dwt_readdevid();
 	printf("==============ID:%08x\n", id);
-  build_examples();
+  // build_examples();
+  // example_pointer();
+  my_read_dev_id();
   // if (uwbErrorCode == 0) {
   //   dwEnableAllLeds(dwm);
   // } else {
