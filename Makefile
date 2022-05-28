@@ -63,9 +63,9 @@ src/platform/port.o \
 src/config_options.o
 
 #libdw3000 examples
-INCLUDES+=-Isrc/examples/examples_info/examples_defines.h \
--Isrc/examples/shared_data/shared_defines.h  \
--Isrc/examples/shared_data/shared_functions.h \
+INCLUDES+=-Isrc/examples/examples_info/ \
+-Isrc/examples/shared_data/  \
+-Isrc
 
 OBJS+=src/examples/ex_00a_reading_dev_id/read_dev_id.o \
 src/examples/ex_01a_simple_tx/simple_tx.o \
@@ -114,6 +114,9 @@ src/examples/ex_15_le_pend/le_pend_tx.o \
 src/examples/examples_info/example_info.o \
 src/examples/shared_data/shared_functions.o \
 
+#libdw3000 examples mac802.15.8
+INCLUDES+=-Isrc/MAC_802_15_8/ \
+OBJS+=src/MAC_802_15_8/mac_802_15_8.o
 
 
 CFLAGS+=$(PROCESSOR) $(INCLUDES) -O3 -g3 -Wall -Wno-pointer-sign -std=gnu11
