@@ -114,9 +114,9 @@ src/examples/ex_15_le_pend/le_pend_tx.o \
 src/examples/examples_info/example_info.o \
 src/examples/shared_data/shared_functions.o \
 
-#libdw3000 examples mac802.15.8
-INCLUDES+=-Isrc/MAC_802_15_8/ \
-OBJS+=src/MAC_802_15_8/mac_802_15_8.o
+#libdw3000 examples mac802.15
+INCLUDES+=-Isrc/MAC_802_15_8/ -Isrc/MAC_802_15_4/
+OBJS+=src/MAC_802_15_8/mac_802_15_8.o src/MAC_802_15_4/mac_802_15_4.o
 
 
 CFLAGS+=$(PROCESSOR) $(INCLUDES) -O3 -g3 -Wall -Wno-pointer-sign -std=gnu11
