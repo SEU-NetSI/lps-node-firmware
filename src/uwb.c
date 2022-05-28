@@ -39,7 +39,7 @@
 // used in the example code
 void test_run_info(unsigned char *data)
 {
-    printf("%s\n", data);
+    printf("%s\r\n", data);
 }
 
 void Sleep(unsigned int time_ms)
@@ -88,7 +88,7 @@ void uwbInit()
 
   //uwbErrorCode = dwConfigure(dwm); // Configure the dw1000 chip
 	uint32_t id = dwt_readdevid();
-	printf("==============ID:%08x\n", id);
+	printf("==============ID:%08x\r\n", id);
 
   build_examples();
   example_pointer();
