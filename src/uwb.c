@@ -86,16 +86,11 @@ void uwbInit()
   // static StaticSemaphore_t irqSemaphoreBuffer;
   // irqSemaphore = xSemaphoreCreateBinaryStatic(&irqSemaphoreBuffer);
 
-  dwt_setleds(3);
   //uwbErrorCode = dwConfigure(dwm); // Configure the dw1000 chip
 	uint32_t id = dwt_readdevid();
 	printf("==============ID:%08x\n", id);
 
-  my_read_dev_id();
-
-	printf("example_pointer:%08x\n", example_pointer);
   build_examples();
-	printf("example_pointer:%08x\n", example_pointer);
   example_pointer();
 
   // if (uwbErrorCode == 0) {
