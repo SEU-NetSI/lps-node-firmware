@@ -22,6 +22,9 @@
 
 #if defined(TEST_SIMPLE_RX)
 
+#define TRUE 1 
+#define FALSE 0 
+
 extern void test_run_info(unsigned char *data);
 
 /* Example application name */
