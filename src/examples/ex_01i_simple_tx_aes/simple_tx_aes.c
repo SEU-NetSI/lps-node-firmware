@@ -118,7 +118,7 @@ int simple_tx_aes(void)
     if (dwt_initialise(DWT_DW_INIT) == DWT_ERROR)
     {
         test_run_info((unsigned char *)"INIT FAILED");
-        while (TRUE)
+        while (1)
         { };
     }
 
@@ -152,7 +152,7 @@ int simple_tx_aes(void)
     dwt_writetxfctrl(sizeof(header) + sizeof(payload) + mic_size + FCS_LEN, 0, 0);/* Set the frame control size*/
     PN&=0xFFFFFFFFFFFF;//Verify PN that was entered is not more than 6 bytes
 
-    while(TRUE)
+    while(1)
     {
         /* Assuming head & nonce are both of the same storage container size */
         nonce[0]=header.nonce[0]=(uint8_t)PN;

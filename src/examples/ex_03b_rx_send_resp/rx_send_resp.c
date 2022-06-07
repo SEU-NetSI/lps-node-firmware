@@ -140,7 +140,7 @@ int rx_send_resp(void)
             {
                 dwt_readrxdata(rx_buffer, frame_len, 0);
             }
-
+            test_run_info((unsigned char *)rx_buffer);
             /* TESTING BREAKPOINT LOCATION #1 */
 
             /* Clear good RX frame event in the DW IC status register. */

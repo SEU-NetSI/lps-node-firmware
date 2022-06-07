@@ -110,7 +110,7 @@ int simple_rx_aes(void)
     if (dwt_initialise(DWT_DW_INIT) == DWT_ERROR)
     {
         test_run_info((unsigned char *)"INIT FAILED");
-        while (TRUE)
+        while (1)
         { };
     }
 
@@ -130,7 +130,7 @@ int simple_rx_aes(void)
     aes_job.mode        = aes_config.mode;
     aes_job.mic_size    = mic_size;
 
-    while(TRUE)
+    while(1)
     {
         /* Activate reception immediately. See NOTE 2 below. */
         dwt_rxenable(DWT_START_RX_IMMEDIATE);
@@ -146,6 +146,10 @@ int simple_rx_aes(void)
 
             /* Decrypt received packet */
             aes_results=rx_aes_802_15_8((finfo16 & RX_FINFO_RXFLEN_BIT_MASK),&aes_job,payload,sizeof(payload),aes_config.aes_core_type);
+            if (aes_results == AES_RES_OK) {
+                // test_run_info((unsigned char *)"AES RX OK");
+                test_run_info((unsigned char *) payload);
+            }
             if (aes_results!=AES_RES_OK)
             {
                 switch (aes_results)
@@ -161,6 +165,7 @@ int simple_rx_aes(void)
                         break;
                     case AES_RES_ERROR_IGNORE_FRAME:
                     case AES_RES_OK:
+                        test_run_info((unsigned char *)"AES RX OK");
                         break;
                 }
                 break;//Exit on error
@@ -169,7 +174,8 @@ int simple_rx_aes(void)
             {
                 char str[20];
                 static int cnt;
-                sprintf(str,"AES TX OK %d", cnt++);
+                sprintf(str,"AES RX OKKKK %d", cnt++);
+                test_run_info((unsigned char *)str);
             }
             /* Clear good RX frame event in the DW chip status register. */
             dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_RXFCG_BIT_MASK);

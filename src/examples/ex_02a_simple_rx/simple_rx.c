@@ -128,7 +128,7 @@ int simple_rx(void)
             dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_RXFCG_BIT_MASK);
 
             test_run_info((unsigned char *)"Frame Received");
-
+            test_run_info((unsigned char *)rx_buffer);
         }
         else
         {

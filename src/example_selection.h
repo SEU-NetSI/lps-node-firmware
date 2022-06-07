@@ -19,30 +19,33 @@ extern "C" {
 
 //Enable the needed example/test. Please enable only one example/test!
 
-//#define TEST_READING_DEV_ID
-//#define TEST_SIMPLE_TX
-//#define TEST_SIMPLE_TX_PDOA
-//#define TEST_TX_SLEEP
-//#define TEST_TX_SLEEP_IDLE_RC
-//#define TEST_TX_SLEEP_AUTO
-//#define TEST_TX_SLEEP_TIMED
-//#define TEST_TX_WITH_CCA
+// #define TEST_READING_DEV_ID
 
-//#define TEST_SIMPLE_RX
-//#define TEST_RX_DIAG
-//#define TEST_RX_SNIFF
-//#define TEST_RX_TRIM
+// #define TEST_SIMPLE_TX
+// #define TEST_SIMPLE_RX
+
+// #define TEST_SIMPLE_TX_PDOA
+// #define TEST_TX_SLEEP
+// #define TEST_TX_SLEEP_IDLE_RC
+// #define TEST_TX_SLEEP_AUTO
+// #define TEST_TX_SLEEP_TIMED
+// #define TEST_TX_WITH_CCA
+
+
+// #define TEST_RX_DIAG
+// #define TEST_RX_SNIFF
+// #define TEST_RX_TRIM
 //#define TEST_SIMPLE_RX_PDOA
 
 //#define TEST_SIMPLE_TX_STS_SDC
 //#define TEST_SIMPLE_RX_STS_SDC
 
-//#define TEST_SIMPLE_TX_AES
-//#define TEST_SIMPLE_RX_AES
+// #define TEST_SIMPLE_TX_AES
+// #define TEST_SIMPLE_RX_AES
 
-//#define TEST_TX_WAIT_RESP
-//#define TEST_TX_WAIT_RESP_INT
-//#define TEST_RX_SEND_RESP
+// #define TEST_TX_WAIT_RESP
+#define TEST_TX_WAIT_RESP_INT
+// #define TEST_RX_SEND_RESP
 
 //#define TEST_CONTINUOUS_WAVE
 //#define TEST_CONTINUOUS_FRAME
@@ -51,7 +54,7 @@ extern "C" {
 //#define TEST_DS_TWR_RESPONDER_STS
 
 //#define TEST_DS_TWR_INITIATOR
-#define TEST_DS_TWR_RESPONDER
+// #define TEST_DS_TWR_RESPONDER
 
 //#define TEST_DS_TWR_STS_SDC_INITIATOR
 //#define TEST_DS_TWR_STS_SDC_RESPONDER
@@ -68,12 +71,12 @@ extern "C" {
 //#define TEST_AES_SS_TWR_INITIATOR
 //#define TEST_AES_SS_TWR_RESPONDER
 
-//#define TEST_ACK_DATA_TX
-//#define TEST_ACK_DATA_RX
+// #define TEST_ACK_DATA_TX
+// #define TEST_ACK_DATA_RX
 
 //#define TEST_ACK_DATA_RX_DBL_BUFF
 
-//#define TEST_SPI_CRC
+// #define TEST_SPI_CRC
 //#define TEST_GPIO
 
 //#define TEST_OTP_WRITE

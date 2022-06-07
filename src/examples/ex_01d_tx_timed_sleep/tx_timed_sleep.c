@@ -147,7 +147,9 @@ int tx_timed_sleep(void)
          * STATUS register is 4 bytes long but, as the event we are looking at is in the first byte of the register, we can use this simplest API
          * function to access it.*/
         while (!(dwt_read32bitreg(SYS_STATUS_ID) & SYS_STATUS_TXFRS_BIT_MASK))
-        {};
+        {
+                test_run_info((unsigned char *)"ERROR");
+        };
 
         /* Clear TX frame sent event. */
         dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_TXFRS_BIT_MASK);
@@ -156,11 +158,11 @@ int tx_timed_sleep(void)
         dwt_entersleep(DWT_DW_IDLE);
 
         sleeping = 1;
-
+        test_run_info((unsigned char *)"Before Wake Up");
         /* In this example, there is nothing to do to wake the DW IC up as it is handled by the sleep timer. */
         while (sleeping)
         {}; /* Wait for device to wake up */
-
+        test_run_info((unsigned char *)"Wake Up");
         /* Increment the blink frame sequence number (modulo 256). */
         tx_msg[BLINK_FRAME_SN_IDX]++;
     }
@@ -182,7 +184,9 @@ static void spi_ready_cb(const dwt_cb_data_t *cb_data)
     UNUSED(cb_data);
 #endif //NRF52840_XXAA
     while (!dwt_checkidlerc()) /* Need to make sure DW IC is in IDLE_RC before proceeding */
-    { };
+    {
+        test_run_info((unsigned char *)"is IDLE");
+     };
 
     /* Restore the required configurations on wake */
     dwt_restoreconfig();
@@ -196,7 +200,7 @@ static void spi_ready_cb(const dwt_cb_data_t *cb_data)
  *
  * 1. The device ID is a hard coded constant in the blink to keep the example simple but for a real product every device should have a unique ID.
  *    For development purposes it is possible to generate a DW IC unique ID by combining the Lot ID & Part Number values programmed into the
- *    DW IC during its manufacture. However there is no guarantee this will not conflict with someone else’s implementation. We recommended that
+ *    DW IC during its manufacture. However there is no guarantee this will not conflict with someone elseï¿½s implementation. We recommended that
  *    customers buy a block of addresses from the IEEE Registration Authority for their production items. See "EUI" in the DW IC User Manual.
  * 2. The sleep counter is 16 bits wide but represents the upper 16 bits of a 28 bits counter. Thus the granularity of this counter is 4096 counts.
  *    Combined with the frequency of the internal RING oscillator being typically between 15 and 34 kHz, this means that the time granularity that we

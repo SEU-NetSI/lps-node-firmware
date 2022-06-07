@@ -173,9 +173,11 @@ void uwbInit()
 
   // isInit = true;
 }
-
+static SemaphoreHandle_t irqSemaphore;
 void uwbTask(void* parameters)
-{
+{ 
+  static StaticSemaphore_t irqSemaphoreBuffer;
+  irqSemaphore = xSemaphoreCreateBinaryStatic(&irqSemaphoreBuffer);
 	uint32_t id = dwt_readdevid();
 	printf("==============ID:%08x\r\n", id);
 
@@ -189,22 +191,23 @@ void uwbTask(void* parameters)
   }
 }
 
+
 /**** DWM3000 interrupt handling *****/
 #define DWM_IRQn EXTI0_1_IRQn
 #define DWM_IRQ_PIN GPIO_PIN_0
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  // BaseType_t higherPriorityTaskWoken = pdFALSE;
+  BaseType_t higherPriorityTaskWoken = pdFALSE;
+  
+  switch (GPIO_Pin) {
+    case DWM_IRQ_PIN:
+      xSemaphoreGiveFromISR(irqSemaphore, &higherPriorityTaskWoken);
 
-  // switch (GPIO_Pin) {
-  //   case DWM_IRQ_PIN:
-  //     xSemaphoreGiveFromISR(irqSemaphore, &higherPriorityTaskWoken);
-
-  //     HAL_NVIC_ClearPendingIRQ(DWM_IRQn);
-  //     break;
-  //   default:
-  //     break;
-  // }
-  // portYIELD_FROM_ISR(higherPriorityTaskWoken);
+      HAL_NVIC_ClearPendingIRQ(DWM_IRQn);
+      break;
+    default:
+      break;
+  }
+  portYIELD_FROM_ISR(higherPriorityTaskWoken);
 }

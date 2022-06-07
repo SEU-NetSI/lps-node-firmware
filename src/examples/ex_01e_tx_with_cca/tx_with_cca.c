@@ -144,7 +144,7 @@ int tx_with_cca(void)
     {
         /* local variables for LCD output, this holds the result of the most recent channel assessment y pseudo CCA algorithm,
         * 1 (channel is clear) or 0 (preamble was detected) */
-//        int channel_clear;
+       int channel_clear;
 
         /* Write frame data to DW3000 and prepare transmission. See NOTE 5 below.*/
         dwt_writetxdata(FRAME_LENGTH - FCS_LEN, tx_msg, 0); /* Zero offset in TX buffer. */
@@ -163,7 +163,7 @@ int tx_with_cca(void)
 
         if (status_reg & SYS_STATUS_TXFRS_BIT_MASK)
         {
-//            channel_clear = 1;
+            channel_clear = 1;
 
             tx_sleep_period = TX_DELAY_MS; /* sent a frame - set interframe period */
             next_backoff_interval = INITIAL_BACKOFF_PERIOD; /* set initial backoff period */
@@ -179,12 +179,12 @@ int tx_with_cca(void)
                                * In a real implementation the back-off is typically a randomised period
                                * whose range is an exponentially related to the number of successive failures.
                                * See https://en.wikipedia.org/wiki/Exponential_backoff */
-//            channel_clear = 0;
+            channel_clear = 0;
         }
 
         /* Clear TX frame sent event. */
         dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_TXFRS_BIT_MASK);
-
+        test_run_info((unsigned char *)"TX OK");
         /* Execute a delay between transmissions. */
         Sleep(tx_sleep_period);
     }
@@ -208,7 +208,7 @@ int tx_with_cca(void)
  *    to restart it if they wish to continue observing this pseudo CCA experiencing an environment of high air-utilisation).
  * 2. The device ID is a hard coded constant in the blink to keep the example simple but for a real product every device should have a unique ID.
  *    For development purposes it is possible to generate a DW3000 unique ID by combining the Lot ID & Part Number values programmed into the
- *    DW3000 during its manufacture. However there is no guarantee this will not conflict with someone else’s implementation. We recommended that
+ *    DW3000 during its manufacture. However there is no guarantee this will not conflict with someone elseï¿½s implementation. We recommended that
  *    customers buy a block of addresses from the IEEE Registration Authority for their production items. See "EUI" in the DW3000 User Manual.
  * 3. In a real application, for optimum performance within regulatory limits, it may be necessary to set TX pulse bandwidth and TX power, (using
  *    the dwt_configuretxrf API call) to per device calibrated values saved in the target system or the DW3000 OTP memory.

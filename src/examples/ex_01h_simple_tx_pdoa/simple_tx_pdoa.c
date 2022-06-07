@@ -127,7 +127,7 @@ int simple_tx_pdoa(void)
 
         /* Execute a delay between transmissions. */
         Sleep(TX_DELAY_MS);
-
+        test_run_info((unsigned char *)"TX OK");
         /* Increment the blink frame sequence number (modulo 256). */
         tx_msg[BLINK_FRAME_SN_IDX]++;
     }
@@ -139,7 +139,7 @@ int simple_tx_pdoa(void)
  *
  * 1. The device ID is a hard coded constant in the blink to keep the example simple but for a real product every device should have a unique ID.
  *    For development purposes it is possible to generate a DW IC unique ID by combining the Lot ID & Part Number values programmed into the
- *    DW IC during its manufacture. However there is no guarantee this will not conflict with someone else’s implementation. We recommended that
+ *    DW IC during its manufacture. However there is no guarantee this will not conflict with someone elseï¿½s implementation. We recommended that
  *    customers buy a block of addresses from the IEEE Registration Authority for their production items. See "EUI" in the DW IC User Manual.
  * 2. In a real application, for optimum performance within regulatory limits, it may be necessary to set TX pulse bandwidth and TX power, (using
  *    the dwt_configuretxrf API call) to per device calibrated values saved in the target system or the DW IC OTP memory.

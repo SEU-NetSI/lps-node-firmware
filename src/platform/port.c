@@ -12,9 +12,9 @@
  */
 
 #include <port.h>
-//#include <stm32f1xx_hal_conf.h>
+// #include <stm32f1xx_hal_conf.h>
 #include <usbd_cdc_if.h>
-
+#include <stm32f0xx_hal.h>
 /****************************************************************************/ /**
                                                                                 *
                                                                                 *                              APP global variables
@@ -30,6 +30,9 @@ extern SPI_HandleTypeDef hspi1;
 static volatile uint32_t signalResetDone;
 
 #define DWM_IRQn EXTI0_1_IRQn
+#define DW_RESET_Pin GPIO_PIN_12
+#define DW_RESET_GPIO_Port GPIOB
+#define DW_IRQn_Pin EXTI0_1_IRQn
 typedef void (*port_dwic_isr_t)(void); 
 
 /* DW IC IRQ handler definition. */
@@ -142,9 +145,9 @@ ITStatus EXTI_GetITEnStatus(IRQn_Type IRQn)
 void reset_DWIC(void)
 {
 
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, 0);
+    HAL_GPIO_WritePin(GPIOB, DW_RESET_Pin, 0);
     HAL_Delay(2);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, 1);
+    HAL_GPIO_WritePin(GPIOB, DW_RESET_Pin, 1);
 
     // GPIO_InitTypeDef GPIO_InitStruct;
 
@@ -172,32 +175,35 @@ void reset_DWIC(void)
  * */
 void setup_DWICRSTnIRQ(int enable)
 {
-    // GPIO_InitTypeDef GPIO_InitStruct;
+    GPIO_InitTypeDef GPIO_InitStruct;
 
-    // if (enable)
-    // {
-    //     // Enable GPIO used as DECA RESET for interrupt
-    //     GPIO_InitStruct.Pin = DW_RESET_Pin;
-    //     GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-    //     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    //     HAL_GPIO_Init(DW_RESET_GPIO_Port, &GPIO_InitStruct);
+    if (enable)
+    {
+        // Enable GPIO used as DECA RESET for interrupt
+        GPIO_InitStruct.Pin = DW_RESET_Pin;
+        GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        HAL_GPIO_Init(DW_RESET_GPIO_Port, &GPIO_InitStruct);
+        // HAL_NVIC_EnableIRQ(EXTI0_IRQn); // pin #0 -> EXTI #0
+        // HAL_NVIC_SetPriority(EXTI0_IRQn, 5, 0);
+        NVIC_EnableIRQ(DWM_IRQn);
+        HAL_NVIC_SetPriority(DWM_IRQn, 5, 0);
+    }
+    else
+    {
+        HAL_NVIC_DisableIRQ(DWM_IRQn); // pin #0 -> EXTI #0
 
-    //     HAL_NVIC_EnableIRQ(EXTI0_IRQn); // pin #0 -> EXTI #0
-    //     HAL_NVIC_SetPriority(EXTI0_IRQn, 5, 0);
-    // }
-    // else
-    // {
-    //     HAL_NVIC_DisableIRQ(EXTI0_IRQn); // pin #0 -> EXTI #0
-
-    //     // put the pin back to tri-state ... as
-    //     // output open-drain (not active)
-    //     GPIO_InitStruct.Pin = DW_RESET_Pin;
-    //     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-    //     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    //     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-    //     HAL_GPIO_Init(DW_RESET_GPIO_Port, &GPIO_InitStruct);
-    //     HAL_GPIO_WritePin(DW_RESET_GPIO_Port, DW_RESET_Pin, GPIO_PIN_SET);
-    // }
+        // put the pin back to tri-state ... as
+        // output open-drain (not active)
+        // GPIO_InitStruct.Pin = DW_RESET_Pin;
+        GPIO_InitStruct.Pin = DW_RESET_Pin;
+        GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        // GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+        GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+        HAL_GPIO_Init(DW_RESET_GPIO_Port, &GPIO_InitStruct);
+        HAL_GPIO_WritePin(DW_RESET_GPIO_Port, DW_RESET_Pin, GPIO_PIN_SET);
+    }
 }
 
 /*! ------------------------------------------------------------------------------------------------------------------
@@ -355,17 +361,17 @@ void port_LCD_RW_clear(void)
 //         //            dw_rst_pin_irq_cb(); /* bare-metal signal */
 //         //            break;
 //         //        }
-//         //
+        
 //     case DW_RESET_Pin:
 //         signalResetDone = 1;
 //         break;
 
 //     case DW_IRQn_Pin:
 //     {
-//         // while (HAL_GPIO_ReadPin(DECAIRQ_GPIO, DW_IRQn_Pin) == GPIO_PIN_SET)
+//         while (HAL_GPIO_ReadPin(DECAIRQ_GPIO, DW_IRQn_Pin) == GPIO_PIN_SET)
 //         {
 //             process_deca_irq();
-//             // dwt_isr();
+//             dwt_isr();
 //         }
 
 //         break;
@@ -376,55 +382,55 @@ void port_LCD_RW_clear(void)
 //     }
 // }
 
-/* @fn      process_deca_irq
- * @brief   main call-back for processing of DW3000 IRQ
- *          it re-enters the IRQ routing and processes all events.
- *          After processing of all events, DW3000 will clear the IRQ line.
- * */
-__INLINE void process_deca_irq(void)
-{
-    // while (port_CheckEXT_IRQ() != 0)
-    // {
-    //     if (port_dwic_isr)
-    //     {
-    //         port_dwic_isr();
-    //     }
-    // } // while DW3000 IRQ line active
-}
+// /* @fn      process_deca_irq
+//  * @brief   main call-back for processing of DW3000 IRQ
+//  *          it re-enters the IRQ routing and processes all events.
+//  *          After processing of all events, DW3000 will clear the IRQ line.
+//  * */
+// __INLINE void process_deca_irq(void)
+// {
+//     while (port_CheckEXT_IRQ() != 0)
+//     {
+//         if (port_dwic_isr)
+//         {
+//             port_dwic_isr();
+//         }
+//     } // while DW3000 IRQ line active
+// }
 
-/* @fn      port_DisableEXT_IRQ
- * @brief   wrapper to disable DW_IRQ pin IRQ
- *          in current implementation it disables all IRQ from lines 5:9
- * */
-__INLINE void port_DisableEXT_IRQ(void)
-{
-    // NVIC_DisableIRQ(DECAIRQ_EXTI_IRQn);
-}
+// /* @fn      port_DisableEXT_IRQ
+//  * @brief   wrapper to disable DW_IRQ pin IRQ
+//  *          in current implementation it disables all IRQ from lines 5:9
+//  * */
+// __INLINE void port_DisableEXT_IRQ(void)
+// {
+//     NVIC_DisableIRQ(DECAIRQ_EXTI_IRQn);
+// }
 
-/* @fn      port_EnableEXT_IRQ
- * @brief   wrapper to enable DW_IRQ pin IRQ
- *          in current implementation it enables all IRQ from lines 5:9
- * */
-__INLINE void port_EnableEXT_IRQ(void)
-{
-    // NVIC_EnableIRQ(DECAIRQ_EXTI_IRQn);
-}
+// /* @fn      port_EnableEXT_IRQ
+//  * @brief   wrapper to enable DW_IRQ pin IRQ
+//  *          in current implementation it enables all IRQ from lines 5:9
+//  * */
+// __INLINE void port_EnableEXT_IRQ(void)
+// {
+//     NVIC_EnableIRQ(DECAIRQ_EXTI_IRQn);
+// }
 
-/* @fn      port_GetEXT_IRQStatus
- * @brief   wrapper to read a DW_IRQ pin IRQ status
- * */
-__INLINE uint32_t port_GetEXT_IRQStatus(void)
-{
-    // return EXTI_GetITEnStatus(DECAIRQ_EXTI_IRQn);
-}
+// /* @fn      port_GetEXT_IRQStatus
+//  * @brief   wrapper to read a DW_IRQ pin IRQ status
+//  * */
+// __INLINE uint32_t port_GetEXT_IRQStatus(void)
+// {
+//     return EXTI_GetITEnStatus(DECAIRQ_EXTI_IRQn);
+// }
 
-/* @fn      port_CheckEXT_IRQ
- * @brief   wrapper to read DW_IRQ input pin state
- * */
-__INLINE uint32_t port_CheckEXT_IRQ(void)
-{
-    // return HAL_GPIO_ReadPin(DECAIRQ_GPIO, DW_IRQn_Pin);
-}
+// /* @fn      port_CheckEXT_IRQ
+//  * @brief   wrapper to read DW_IRQ input pin state
+//  * */
+// __INLINE uint32_t port_CheckEXT_IRQ(void)
+// {
+//     return HAL_GPIO_ReadPin(DECAIRQ_GPIO, DW_IRQn_Pin);
+// }
 
 /****************************************************************************/ /**
                                                                                 *
@@ -568,17 +574,17 @@ HAL_StatusTypeDef flush_report_buff(void)
 void port_set_dwic_isr(port_dwic_isr_t dwic_isr)
 {
     /* Check DW IC IRQ activation status. */
-    ITStatus en = port_GetEXT_IRQStatus();
+    // ITStatus en = port_GetEXT_IRQStatus();
 
     /* If needed, deactivate DW IC IRQ during the installation of the new handler. */
-    port_DisableEXT_IRQ();
+    // port_DisableEXT_IRQ();
 
     port_dwic_isr = dwic_isr;
-
-    if (!en)
-    {
-        port_EnableEXT_IRQ();
-    }
+    NVIC_EnableIRQ(DWM_IRQn);
+    // if (!en)
+    // {
+    //     port_EnableEXT_IRQ();
+    // }
 }
 
 #if (EVB1000_LCD_SUPPORT == 1)

@@ -88,6 +88,11 @@ static void tx_conf_cb(const dwt_cb_data_t *cb_data);
  * temperature. These values can be calibrated prior to taking reference measurements. See NOTE 9 below. */
 extern dwt_txconfig_t txconfig_options;
 
+static int checkIrq()
+{
+  return HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0);
+}
+
 /**
  * Application entry point.
  */
@@ -101,17 +106,17 @@ int tx_wait_resp_int(void)
 
     /* Reset DW IC */
     reset_DWIC(); /* Target specific drive of RSTn line into DW IC low for a period. */
-
+    test_run_info((unsigned char *)"s1");
     Sleep(2); // Time needed for DW3000 to start up (transition from INIT_RC to IDLE_RC, or could wait for SPIRDY event)
 
     while (!dwt_checkidlerc()) /* Need to make sure DW IC is in IDLE_RC before proceeding */
-    { };
-
+    {     test_run_info((unsigned char *)"s3");};
+    test_run_info((unsigned char *)"s2");
     if (dwt_initialise(DWT_DW_INIT) == DWT_ERROR)
     {
         test_run_info((unsigned char *)"INIT FAILED     ");
         while (1)
-        { };
+        {     test_run_info((unsigned char *)"s4");};
     }
 
     /* Configure DW IC. See NOTE 10 below. */
@@ -119,7 +124,7 @@ int tx_wait_resp_int(void)
     {
         test_run_info((unsigned char *)"CONFIG FAILED     ");
         while (1)
-        { };
+        {test_run_info((unsigned char *)"s5"); };
     }
 
     /* Configure the TX spectrum parameters (power, PG delay and PG count) */
@@ -127,6 +132,7 @@ int tx_wait_resp_int(void)
 
     /* Register the call-backs (SPI CRC error callback is not used). */
     dwt_setcallbacks(&tx_conf_cb, &rx_ok_cb, &rx_to_cb, &rx_err_cb, NULL, NULL);
+    // dwt_setcallbacks(NULL, &rx_ok_cb, NULL, NULL, NULL, NULL);
 
     /* Enable wanted interrupts (TX confirmation, RX good frames, RX timeouts and RX errors). */
     dwt_setinterrupt(SYS_ENABLE_LO_TXFRS_ENABLE_BIT_MASK | SYS_ENABLE_LO_RXFCG_ENABLE_BIT_MASK | SYS_ENABLE_LO_RXFTO_ENABLE_BIT_MASK |
@@ -148,17 +154,25 @@ int tx_wait_resp_int(void)
     /* Loop forever sending and receiving frames periodically. */
     while (1)
     {
+        test_run_info((unsigned char *)"s6");
         /* Write frame data to DW IC and prepare transmission. See NOTE 7 below. */
         dwt_writetxdata(sizeof(tx_msg), tx_msg, 0); /* Zero offset in TX buffer. */
         dwt_writetxfctrl(sizeof(tx_msg), 0, 0); /* Zero offset in TX buffer, no ranging. */
 
         /* Start transmission, indicating that a response is expected so that reception is enabled immediately after the frame is sent. */
-        dwt_starttx(DWT_START_TX_IMMEDIATE | DWT_RESPONSE_EXPECTED);
-
+        // dwt_starttx(DWT_START_TX_IMMEDIATE | DWT_RESPONSE_EXPECTED);
+        dwt_rxenable(DWT_START_RX_IMMEDIATE);
+        test_run_info((unsigned char *) "send");
+        while(1) {
+            do{
+                // test_run_info((unsigned char *) "irq");
+                dwt_isr();
+            } while(checkIrq() == 0);
+        }
         /* Wait for any RX event. */
         while (tx_delay_ms == -1)
-        { };
-
+        {        test_run_info((unsigned char *)"s7"); };
+                test_run_info((unsigned char *) "sendaf");
         /* Execute the defined delay before next transmission. */
         if (tx_delay_ms > 0)
         {
@@ -198,7 +212,8 @@ static void rx_ok_cb(const dwt_cb_data_t *cb_data)
     {
         dwt_readrxdata(rx_buffer, cb_data->datalength, 0);
     }
-
+    test_run_info((unsigned char *)"RX");
+    test_run_info((unsigned char *)rx_buffer);
     /* Set corresponding inter-frame delay. */
     tx_delay_ms = DFLT_TX_DELAY_MS;
 
@@ -225,6 +240,7 @@ static void rx_to_cb(const dwt_cb_data_t *cb_data)
     tx_delay_ms = RX_TO_TX_DELAY_MS;
 
     /* TESTING BREAKPOINT LOCATION #2 */
+    test_run_info((unsigned char *)"RX Timeout");
 }
 
 /*! ------------------------------------------------------------------------------------------------------------------
@@ -247,6 +263,7 @@ static void rx_err_cb(const dwt_cb_data_t *cb_data)
     tx_delay_ms = RX_ERR_TX_DELAY_MS;
 
     /* TESTING BREAKPOINT LOCATION #3 */
+    test_run_info((unsigned char *)"RX Error");
 }
 
 /*! ------------------------------------------------------------------------------------------------------------------
@@ -272,6 +289,7 @@ static void tx_conf_cb(const dwt_cb_data_t *cb_data)
      * dwt_setcallbacks(). The ISR will not call it which will allow to save some interrupt processing time. */
 
     /* TESTING BREAKPOINT LOCATION #4 */
+    test_run_info((unsigned char *)"TX Confirmation");
 }
 #endif
 /*****************************************************************************************************************************************************
@@ -279,12 +297,12 @@ static void tx_conf_cb(const dwt_cb_data_t *cb_data)
  *
  * 1. The device ID is a hard coded constant in the blink to keep the example simple but for a real product every device should have a unique ID.
  *    For development purposes it is possible to generate a DW IC unique ID by combining the Lot ID & Part Number values programmed into the
- *    DW IC during its manufacture. However there is no guarantee this will not conflict with someone else’s implementation. We recommended that
+ *    DW IC during its manufacture. However there is no guarantee this will not conflict with someone elseï¿½s implementation. We recommended that
  *    customers buy a block of addresses from the IEEE Registration Authority for their production items. See "EUI" in the DW IC User Manual.
  * 2. In this example, the DW IC is put into IDLE state after calling dwt_initialise(). This means that a fast SPI rate of up to 20 MHz can be used
  *    thereafter.
  * 3. TX to RX delay can be set to 0 to activate reception immediately after transmission. But, on the responder side, it takes time to process the
- *    received frame and generate the response (this has been measured experimentally to be around 70 µs). Using an RX to TX delay slightly less than
+ *    received frame and generate the response (this has been measured experimentally to be around 70 ï¿½s). Using an RX to TX delay slightly less than
  *    this minimum turn-around time allows the application to make the communication efficient while reducing power consumption by adjusting the time
  *    spent with the receiver activated.
  * 4. This timeout is for complete reception of a frame, i.e. timeout duration must take into account the length of the expected frame. Here the value

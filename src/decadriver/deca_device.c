@@ -3309,7 +3309,7 @@ uint8_t dwt_checkidlerc(void)
  * no return value
  */
 
-
+extern void test_run_info(unsigned char *data);
 void dwt_isr(void)
 {
 
@@ -3319,9 +3319,11 @@ void dwt_isr(void)
     pdw3000local->cbData.status = status;
     if ((pdw3000local->stsconfig & DWT_STS_MODE_ND) == DWT_STS_MODE_ND) //cannot use FSTAT when in no data mode...
     {
+        test_run_info((unsigned char *) "-11-");
 
         if (status & SYS_STATUS_RXFR_BIT_MASK)
         {
+            test_run_info((unsigned char *) "-111-");
             fstat |= FINT_STAT_RXOK_BIT_MASK;
         }
     }
@@ -3329,6 +3331,7 @@ void dwt_isr(void)
     // AES_ERR|SPICRCERR|BRNOUT|SPI_UNF|SPI_OVR|CMD_ERR|SPI_COLLISION|PLLHILO
     if(fstat & FINT_STAT_SYS_PANIC_BIT_MASK)
     {
+        test_run_info((unsigned char *) "-1111-");
         pdw3000local->cbData.status_hi = dwt_read16bitoffsetreg(SYS_STATUS_HI_ID, 0);
 
         // Handle SPI CRC error event, which was due to an SPI write CRC error
@@ -3336,18 +3339,21 @@ void dwt_isr(void)
         if((pdw3000local->spicrc && (pdw3000local->cbData.status & SYS_STATUS_SPICRCE_BIT_MASK)) ||
                 (pdw3000local->cbData.status_hi & (SYS_STATUS_HI_SPIERR_BIT_MASK | SYS_STATUS_HI_SPI_UNF_BIT_MASK | SYS_STATUS_HI_SPI_OVF_BIT_MASK)))
         {
+            test_run_info((unsigned char *) "-11111-");
             dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_SPICRCE_BIT_MASK);
             dwt_write16bitoffsetreg(SYS_STATUS_HI_ID, 0, (SYS_STATUS_HI_SPIERR_BIT_MASK | SYS_STATUS_HI_SPI_UNF_BIT_MASK | SYS_STATUS_HI_SPI_OVF_BIT_MASK)); // Clear SPI error event bits
             // Call the corresponding callback if present
             if(pdw3000local->cbSPIErr != NULL)
             {
+                test_run_info((unsigned char *) "-111111-");
                 pdw3000local->cbSPIErr(&pdw3000local->cbData);
             }
         }
 
         // Handle Fast CMD errors event, the means the last CMD did not execute (e.g. it was given while device was already executing previous)
         if(pdw3000local->cbData.status_hi & SYS_STATUS_HI_CMD_ERR_BIT_MASK)
-        {
+        {   
+            test_run_info((unsigned char *) "-1111111-");
             dwt_write16bitoffsetreg(SYS_STATUS_HI_ID, 0, SYS_STATUS_HI_CMD_ERR_BIT_MASK); // Clear CMD error event bit
             // Call the corresponding callback if present
             /*if(pdw3000local->cbCMDErr != NULL)
@@ -3361,13 +3367,15 @@ void dwt_isr(void)
 
     // Handle TX frme sent confirmation event
     if(fstat & FINT_STAT_TXOK_BIT_MASK)
-    {
+    {   
+        test_run_info((unsigned char *) "-11111111-");
         // Clear TX events after the callback - this lets the host schedule another TX/RX inside the callback
         dwt_write8bitoffsetreg(SYS_STATUS_ID, 0, (uint8_t)SYS_STATUS_ALL_TX); // Clear TX event bits to clear the interrupt
 
         // Call the corresponding callback if present
         if(pdw3000local->cbTxDone != NULL)
         {
+                    test_run_info((unsigned char *) "-111111111-");
             pdw3000local->cbTxDone(&pdw3000local->cbData);
         }
 
@@ -3377,12 +3385,13 @@ void dwt_isr(void)
 
     // SPI ready and IDLE_RC bit gets set when device powers on, or on wake up
     if(fstat & FINT_STAT_SYS_EVENT_BIT_MASK)
-    {
+    {   
+        test_run_info((unsigned char *) "-1111111111-");
         //pdw3000local->cbData.status_hi = dwt_read16bitreg(SYS_STATUS_HI_ID);
 
         // Call the corresponding callback if present
         if(pdw3000local->cbSPIRdy != NULL)
-        {
+        {test_run_info((unsigned char *) "-11111111111-");
             pdw3000local->cbSPIRdy(&pdw3000local->cbData);
         }
         // Clear SPI RDY events after the callback - this lets the host read the SYS_STATUS register inside the callback
@@ -3390,10 +3399,11 @@ void dwt_isr(void)
 
         //VTDET, GPIO, not handled here ...
     }
-
+    test_run_info((unsigned char *) "-1-");
     // Handle RX ok events
     if(fstat & FINT_STAT_RXOK_BIT_MASK)
     {
+        test_run_info((unsigned char *) "-2-");
         uint32_t cia_err = 0;
         
         pdw3000local->cbData.rx_flags = 0;
@@ -3447,8 +3457,12 @@ void dwt_isr(void)
         }
         else
         // Handle RX good frame event
+
+        test_run_info((unsigned char *) "-3-");
+                test_run_info((unsigned char *) "-33-");
         if (status & SYS_STATUS_RXFCG_BIT_MASK)
         {
+            test_run_info((unsigned char *) "-4-");
             uint16_t finfo16;
 
             // Read frame info - Only the first two bytes of the register are used here.
@@ -3490,6 +3504,7 @@ void dwt_isr(void)
         // Call the corresponding callback if present
         if(pdw3000local->cbRxOk != NULL)
         {
+            test_run_info((unsigned char *)"RX OK CBBB");
             pdw3000local->cbRxOk(&pdw3000local->cbData);
         }
 
@@ -3504,13 +3519,14 @@ void dwt_isr(void)
     // RXFCE&~DISFCE|RXPHE|RXFSL|ARFE|RXSTO|RXOVRR. Real errored frame received, so ignore FCE if disabled
     // Handle RX errors events
     if(fstat & FINT_STAT_RXERR_BIT_MASK)
-    {
+    {test_run_info((unsigned char *) "-11111111111error-");
         // Clear RX error events before the callback - this lets the host renable the receiver inside the callback
         dwt_write32bitoffsetreg(SYS_STATUS_ID, 0, SYS_STATUS_ALL_RX_ERR); // Clear RX error event bits
 
         // Call the corresponding callback if present
         if(pdw3000local->cbRxErr != NULL)
         {
+            test_run_info((unsigned char *) "-11111111111errorccc-");
             pdw3000local->cbRxErr(&pdw3000local->cbData);
         }
 
@@ -3518,19 +3534,20 @@ void dwt_isr(void)
 
     // Handle RX Timeout event (PTO and FWTO)
     if(fstat & FINT_STAT_RXTO_BIT_MASK)
-    {
+    {   
+        test_run_info((unsigned char *) "-11111111111to-");
         // Clear RX TO events before the callback - this lets the host renable the receiver inside the callback
         dwt_write8bitoffsetreg(SYS_STATUS_ID, 2, (uint8_t)(SYS_STATUS_ALL_RX_TO >> 16)); // Clear RX timeout event bits (PTO, RFTO)
 
         // Call the corresponding callback if present
         if(pdw3000local->cbRxTo != NULL)
         {
+            test_run_info((unsigned char *) "-11111111111tosss-");
             pdw3000local->cbRxTo(&pdw3000local->cbData);
         }
 
     }
-
-
+    test_run_info((unsigned char *) "-end-");
 }
 
 /*! ------------------------------------------------------------------------------------------------------------------
@@ -3959,7 +3976,7 @@ void dwt_setinterrupt(uint32_t bitmask_lo, uint32_t bitmask_hi, dwt_INT_options_
     decaIrqStatus_t stat ;
 
     // Need to beware of interrupts occurring in the middle of following read modify write cycle
-    stat = decamutexon();
+    // stat = decamutexon();
 
     if(INT_options == DWT_ENABLE_INT_ONLY)
     {
@@ -3980,7 +3997,7 @@ void dwt_setinterrupt(uint32_t bitmask_lo, uint32_t bitmask_hi, dwt_INT_options_
         }
     }
 
-    decamutexoff(stat);
+    // decamutexoff(stat);
 }
 
 /*! ------------------------------------------------------------------------------------------------------------------

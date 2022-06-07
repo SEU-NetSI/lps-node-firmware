@@ -2435,7 +2435,7 @@ typedef int decaIrqStatus_t ; // Type for remembering IRQ status
  *
  * returns the state of the DW3000 interrupt
  */
-decaIrqStatus_t decamutexon(void);
+// decaIrqStatus_t decamutexon(void);
 
 /*! ------------------------------------------------------------------------------------------------------------------
  * @brief This function should re-enable interrupts, or at least restore their state as returned(&saved) by decamutexon
@@ -2450,7 +2450,7 @@ decaIrqStatus_t decamutexon(void);
  *
  * returns the state of the DW3000 interrupt
  */
-void decamutexoff(decaIrqStatus_t s);
+// void decamutexoff(decaIrqStatus_t s);
 
 /*! ------------------------------------------------------------------------------------------------------------------
  * @brief Wait for a given amount of time.
