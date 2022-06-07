@@ -48,8 +48,6 @@
 #include "test_support.h"
 #include "production_test.h"
 
-#include "uwb.h"
-
 
 #define POWER_LEVELS 10
 
@@ -124,67 +122,20 @@ static void main_task(void *pvParameters) {
 
   cfgInit();
 
-  // // Initialising radio
-  // testSupportPrintStart("Initialize UWB ");
-  // uwbInit();
-  // if (uwbTest()) {
-  //   printf("[OK]\r\n");
-  // } else {
-  //   printf("[ERROR]: %s\r\n", uwbStrError());
-  //   selftestPasses = false;
-  // }
-
-  // if (!selftestPasses) {
-  //   printf("TEST\t: One or more self-tests failed, blocking startup!\r\n");
-  //   usbcommSetSystemStarted(true);
-  // }
-
-  // // Printing UWB configuration
-  // struct uwbConfig_s * uwbConfig = uwbGetConfig();
-  // printf("CONFIG\t: Address is 0x%X\r\n", uwbConfig->address[0]);
-  // printf("CONFIG\t: Mode is %s\r\n", uwbAlgorithmName(uwbConfig->mode));
-  // printf("CONFIG\t: Tag mode anchor list (%i): ", uwbConfig->anchorListSize);
-  // for (i = 0; i < uwbConfig->anchorListSize; i++) {
-  //   printf("0x%02X ", uwbConfig->anchors[i]);
-  // }
-  // printf("\r\n");
-  // printf("CONFIG\t: Anchor position enabled: %s\r\n",
-  //        uwbConfig->positionEnabled?"true":"false");
-  // if (uwbConfig->positionEnabled) {
-  //   printf("CONFIG\t: Anchor position: %f %f %f\r\n", uwbConfig->position[0],
-  //                                                     uwbConfig->position[1],
-  //                                                     uwbConfig->position[2]);
-  // }
-  // printf("CONFIG\t: SmartPower enabled: %s\r\n", uwbConfig->smartPower?"True":"False");
-  // printf("CONFIG\t: Force TX power: %s\r\n", uwbConfig->forceTxPower?"True":"False");
-  // if(uwbConfig->forceTxPower) {
-  //   printf("CONFIG\t: TX power setting: %08X\r\n", (unsigned int)uwbConfig->txPower);
-  // }
-  // printf("CONFIG\t: Bitrate: %s\r\n", uwbConfig->lowBitrate?"low":"normal");
-  // printf("CONFIG\t: Preamble: %s\r\n", uwbConfig->longPreamble?"long":"normal");
-
-  HAL_Delay(500);
-
   ledOff(ledRanging);
   ledOff(ledSync);
   ledOff(ledMode);
 
-  // printf("SYSTEM\t: Node started ...\r\n");
-  // printf("SYSTEM\t: Press 'h' for help.\r\n");
+  printf("SYSTEM\t: Press 'h' for help.\r\n");
 
   usbcommSetSystemStarted(true);
 
-  // // Starts UWB protocol
-  // uwbStart();
-
   // Main loop ...
   while(1) {
-    printf("GreedIsGood\n");
     usbcommPrintWelcomeMessage();
 
     ledTick();
     handleButton();
-    vTaskDelay(1000);
     // // Measure pressure
     // if (uwbConfig.mode != modeSniffer) {
     //   if(lps25hGetData(&pressure, &temperature, &asl)) {
@@ -247,17 +198,17 @@ static void handleMenuMain(char ch, MenuState* menuState) {
       menuState->configChanged = false;
       menuState->tempId = 0;
       break;
-    case 'a': changeMode(MODE_ANCHOR); break;
-    case 't': changeMode(MODE_TAG); break;
-    case 's': changeMode(MODE_SNIFFER); break;
+    // case 'a': changeMode(MODE_ANCHOR); break;
+    // case 't': changeMode(MODE_TAG); break;
+    // case 's': changeMode(MODE_SNIFFER); break;
     case 'm':
-      printModeList();
+      // printModeList();
       printf("Type 0-9 to choose new mode...\r\n");
       menuState->currentMenu = modeMenu;
       menuState->configChanged = false;
       break;
     case 'r':
-      printRadioModeList();
+      // printRadioModeList();
       printf("Type 0-9 to choose new mode...\r\n");
       menuState->currentMenu = radioMenu;
       menuState->configChanged = false;
@@ -465,12 +416,12 @@ static void changeAddress(uint8_t addr) {
 
 static void changeMode(unsigned int newMode) {
     printf("Previous device mode: ");
-    printMode();
+    // printMode();
 
     cfgWriteU8(cfgMode, newMode);
 
     printf("New device mode: ");
-    printMode();
+    // printMode();
 }
 
 static void changePower(uint8_t power) { //expects [0, POWER_LEVELS-1] interval
@@ -504,35 +455,35 @@ static void changePower(uint8_t power) { //expects [0, POWER_LEVELS-1] interval
   cfgWriteU32(cfgTxPower, txPower);
 }
 
-static void printModeList()
-{
-  unsigned int count = uwbAlgorithmCount();
-  int current_mode = -1;
-  uint8_t mode;
+// static void printModeList()
+// {
+//   unsigned int count = uwbAlgorithmCount();
+//   int current_mode = -1;
+//   uint8_t mode;
 
-  if (cfgReadU8(cfgMode, &mode)) {
-    current_mode = mode;
-  }
+//   if (cfgReadU8(cfgMode, &mode)) {
+//     current_mode = mode;
+//   }
 
-  printf("-------------------\r\n");
-  printf("Available UWB modes:\r\n");
-  for (int i=0; i<count; i++) {
-    printf(" %d - %s%s\r\n", i, uwbAlgorithmName(i),
-                             (i == current_mode)?" (Current mode)":"");
-  }
-}
+//   printf("-------------------\r\n");
+//   printf("Available UWB modes:\r\n");
+//   for (int i=0; i<count; i++) {
+//     printf(" %d - %s%s\r\n", i, uwbAlgorithmName(i),
+//                              (i == current_mode)?" (Current mode)":"");
+//   }
+// }
 
-static void printMode() {
-  uint8_t mode;
+// static void printMode() {
+//   uint8_t mode;
 
-  if (cfgReadU8(cfgMode, &mode)) {
-    printf(uwbAlgorithmName(mode));
-  } else {
-    printf("Not found!");
-  }
+//   if (cfgReadU8(cfgMode, &mode)) {
+//     printf(uwbAlgorithmName(mode));
+//   } else {
+//     printf("Not found!");
+//   }
 
-  printf("\r\n");
-}
+//   printf("\r\n");
+// }
 
 static void changeRadioMode(unsigned int newMode) {
     printf("Previous radio mode: ");
