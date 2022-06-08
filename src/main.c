@@ -48,17 +48,15 @@
 #include "test_support.h"
 #include "production_test.h"
 
-
 #define POWER_LEVELS 10
 
-const uint8_t *uid = (uint8_t*)MCU_ID_ADDRESS;
+const uint8_t *uid = (uint8_t *)MCU_ID_ADDRESS;
 
 static void handleButton(void);
 static void bootload(void);
 
-void systemInit() {
-  int i;
-  char ch;
+void systemInit()
+{
   bool selftestPasses = true;
 
   /* Initialize all configured peripherals */
@@ -77,7 +75,8 @@ void systemInit() {
   printf("\r\n\r\n====================\r\n");
 
   printf("SYSTEM\t: CPU-ID: ");
-  for (i=0; i<12; i++) {
+  for (int i = 0; i < 12; i++)
+  {
     printf("%02x", uid[i]);
   }
   printf("\r\n");
@@ -85,10 +84,13 @@ void systemInit() {
   // Initializing pressure sensor (if present ...)
   lps25hInit(&hi2c1);
   testSupportPrintStart("Initializing pressure sensor");
-  if (lps25hTestConnection()) {
+  if (lps25hTestConnection())
+  {
     printf("[OK]\r\n");
     lps25hSetEnabled(true);
-  } else {
+  }
+  else
+  {
     printf("[FAIL] (%u)\r\n", (unsigned int)hi2c1.ErrorCode);
     selftestPasses = false;
   }
@@ -113,17 +115,27 @@ void systemInit() {
 static StaticTask_t xMainTask;
 static StackType_t ucMainStack[configMINIMAL_STACK_SIZE];
 
-static void main_task(void *pvParameters) {
+static void main_task(void *pvParameters)
+{
+  char ch;
   systemInit();
 
-  while(1) {
+  while (1)
+  {
     usbcommPrintWelcomeMessage();
     ledTick();
     handleButton();
+    vTaskDelay(100);
+    usbcommRead(&ch, 1);
+    if (ch == 'u')
+    {
+      bootload();
+    }
   }
 }
 
-int main() {
+int main()
+{
   // Reset of all peripherals, Initializes the Flash interface and the Systick.
   HAL_Init();
 
@@ -137,38 +149,44 @@ int main() {
   vTaskStartScheduler();
 
   // Should never reach there
-  while(1);
+  while (1);
 
   return 0;
 }
 
 /* Function required to use "printf" to print on serial console */
-int _write (int fd, const void *buf, size_t count)
+int _write(int fd, const void *buf, size_t count)
 {
   // stdout
-  if (fd == 1) {
-    #ifdef USE_FTDI_UART
-      HAL_UART_Transmit(&huart1, (uint8_t *)buf, count, HAL_MAX_DELAY);
-    #else
-      usbcommWrite(buf, count);
-    #endif
+  if (fd == 1)
+  {
+#ifdef USE_FTDI_UART
+    HAL_UART_Transmit(&huart1, (uint8_t *)buf, count, HAL_MAX_DELAY);
+#else
+    usbcommWrite(buf, count);
+#endif
   }
 
   // stderr
-  if (fd == 2) {
+  if (fd == 2)
+  {
     HAL_UART_Transmit(&huart1, (uint8_t *)buf, count, HAL_MAX_DELAY);
   }
 
   return count;
 }
 
-static void handleButton(void) {
+static void handleButton(void)
+{
   ButtonEvent be = buttonGetState();
 
-  if (be == buttonShortPress) {
+  if (be == buttonShortPress)
+  {
     ledBlink(ledRanging, true);
     // TODO: Implement and remove ledblink
-  }  else if (be == buttonLongPress) {
+  }
+  else if (be == buttonLongPress)
+  {
     ledBlink(ledSync, true);
     // TODO: Implement and remove ledblink
   }
@@ -177,46 +195,51 @@ static void handleButton(void) {
 }
 
 // Enter bootloader from software: Taken from micropython machine_bootloader function
-static void bootload(void) {
-    printf("Entering DFU Mode\r\n");
-    HAL_Delay(500);
+static void bootload(void)
+{
+  printf("Entering DFU Mode\r\n");
+  HAL_Delay(500);
 
-    HAL_RCC_DeInit();
-    HAL_DeInit();
+  HAL_RCC_DeInit();
+  HAL_DeInit();
 
-    __HAL_REMAPMEMORY_SYSTEMFLASH();
+  __HAL_REMAPMEMORY_SYSTEMFLASH();
 
-    // arm-none-eabi-gcc 4.9.0 does not correctly inline this
-    //     //     // MSP function, so we write it out explicitly here.
-    //__set_MSP(*((uint32_t*) 0x00000000));
-    __ASM volatile ("movs r3, #0\nldr r3, [r3, #0]\nMSR msp, r3\n" : : : "r3", "sp");
+  // arm-none-eabi-gcc 4.9.0 does not correctly inline this
+  //     //     // MSP function, so we write it out explicitly here.
+  //__set_MSP(*((uint32_t*) 0x00000000));
+  __ASM volatile("movs r3, #0\nldr r3, [r3, #0]\nMSR msp, r3\n"
+                 :
+                 :
+                 : "r3", "sp");
 
-    ((void (*)(void)) *((uint32_t*) 0x00000004))();
+  ((void (*)(void)) * ((uint32_t *)0x00000004))();
 
-    while (1);
+  while (1)
+    ;
 }
 
 // Freertos required callbacks
-void vApplicationGetIdleTaskMemory( StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize )
+void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize)
 {
   static StaticTask_t xIdleTaskTCB;
-  static StackType_t uxIdleTaskStack[ configMINIMAL_STACK_SIZE ];
+  static StackType_t uxIdleTaskStack[configMINIMAL_STACK_SIZE];
   *ppxIdleTaskTCBBuffer = &xIdleTaskTCB;
   *ppxIdleTaskStackBuffer = uxIdleTaskStack;
   *pulIdleTaskStackSize = configMINIMAL_STACK_SIZE;
 }
 
-void vApplicationGetTimerTaskMemory( StaticTask_t **ppxTimerTaskTCBBuffer, StackType_t **ppxTimerTaskStackBuffer, uint32_t *pulTimerTaskStackSize )
+void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer, StackType_t **ppxTimerTaskStackBuffer, uint32_t *pulTimerTaskStackSize)
 {
   static StaticTask_t xTimerTaskTCB;
-  static StackType_t uxTimerTaskStack[ configTIMER_TASK_STACK_DEPTH ];
+  static StackType_t uxTimerTaskStack[configTIMER_TASK_STACK_DEPTH];
   *ppxTimerTaskTCBBuffer = &xTimerTaskTCB;
   *ppxTimerTaskStackBuffer = uxTimerTaskStack;
   *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
 }
 
-void vAssertCalled( unsigned long ulLine, const char * const pcFileName )
+void vAssertCalled(unsigned long ulLine, const char *const pcFileName)
 {
   printf("Assert failed at %s:%lu", pcFileName, ulLine);
-  while(1);
+  while (1);
 }
