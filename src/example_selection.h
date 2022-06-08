@@ -22,7 +22,7 @@ extern "C" {
 // #define TEST_READING_DEV_ID
 
 // #define TEST_SIMPLE_TX
-// #define TEST_SIMPLE_RX
+#define TEST_SIMPLE_RX
 
 // #define TEST_SIMPLE_TX_PDOA
 // #define TEST_TX_SLEEP
@@ -44,7 +44,7 @@ extern "C" {
 // #define TEST_SIMPLE_RX_AES
 
 // #define TEST_TX_WAIT_RESP
-#define TEST_TX_WAIT_RESP_INT
+// #define TEST_TX_WAIT_RESP_INT
 // #define TEST_RX_SEND_RESP
 
 //#define TEST_CONTINUOUS_WAVE

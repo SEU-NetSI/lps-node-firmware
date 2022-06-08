@@ -668,3 +668,20 @@ void vAssertCalled( unsigned long ulLine, const char * const pcFileName )
   printf("Assert failed at %s:%lu", pcFileName, ulLine);
   while(1);
 }
+
+
+// void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+// {
+//   BaseType_t higherPriorityTaskWoken = pdFALSE;
+
+//   switch (GPIO_Pin) {
+//     case EXTI0_1_IRQn:
+//       xSemaphoreGiveFromISR(irqSemaphore, &higherPriorityTaskWoken);
+
+//       HAL_NVIC_ClearPendingIRQ(EXTI0_1_IRQn);
+//       break;
+//     default:
+//       break;
+//   }
+//   portYIELD_FROM_ISR(higherPriorityTaskWoken);
+// }

@@ -17,7 +17,8 @@
 #include <port.h>
 #include <shared_defines.h>
 #include <example_selection.h>
-
+#include <FreeRTOS.h>
+#include <semphr.h>
 
 #if defined(TEST_SIMPLE_TX)
 
@@ -39,8 +40,8 @@ static dwt_config_t config = {
     DWT_PHRRATE_STD, /* PHY header rate. */
     (129 + 8 - 8),   /* SFD timeout (preamble length + 1 + SFD length - PAC size). Used in RX only. */
     DWT_STS_MODE_OFF,
-    DWT_STS_LEN_64,  /* STS length, see allowed values in Enum dwt_sts_lengths_e */
-    DWT_PDOA_M0      /* PDOA mode off */
+    DWT_STS_LEN_64, /* STS length, see allowed values in Enum dwt_sts_lengths_e */
+    DWT_PDOA_M0     /* PDOA mode off */
 };
 
 /* The frame sent in this example is an 802.15.4e standard blink. It is a 12-byte frame composed of the following fields:
@@ -52,20 +53,31 @@ static uint8_t tx_msg[] = {0xC5, 0, 'D', 'E', 'C', 'A', 'W', 'A', 'V', 'E'};
 /* Index to access to sequence number of the blink frame in the tx_msg array. */
 #define BLINK_FRAME_SN_IDX 1
 
-#define FRAME_LENGTH    (sizeof(tx_msg)+FCS_LEN) //The real length that is going to be transmitted
+#define FRAME_LENGTH (sizeof(tx_msg) + FCS_LEN) // The real length that is going to be transmitted
 
 /* Inter-frame delay period, in milliseconds. */
 #define TX_DELAY_MS 500
-
+/* Declaration of static functions. */
+static void rx_ok_cb(const dwt_cb_data_t *cb_data);
+static void rx_to_cb(const dwt_cb_data_t *cb_data);
+static void rx_err_cb(const dwt_cb_data_t *cb_data);
+static void tx_conf_cb(const dwt_cb_data_t *cb_data);
 /* Values for the PG_DELAY and TX_POWER registers reflect the bandwidth and power of the spectrum at the current
  * temperature. These values can be calibrated prior to taking reference measurements. See NOTE 2 below. */
 extern dwt_txconfig_t txconfig_options;
+static int checkIrq()
+{
+    return HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0);
+}
+static SemaphoreHandle_t irqSemaphore;
 
 /**
  * Application entry point.
  */
 int simple_tx(void)
 {
+    static StaticSemaphore_t irqSemaphoreBuffer;
+    irqSemaphore = xSemaphoreCreateBinaryStatic(&irqSemaphoreBuffer);
     /* Display application name on LCD. */
     test_run_info((unsigned char *)APP_NAME);
 
@@ -78,34 +90,53 @@ int simple_tx(void)
     Sleep(2); // Time needed for DW3000 to start up (transition from INIT_RC to IDLE_RC, or could wait for SPIRDY event)
 
     while (!dwt_checkidlerc()) /* Need to make sure DW IC is in IDLE_RC before proceeding */
-    { };
+    {
+    };
 
     if (dwt_initialise(DWT_DW_INIT) == DWT_ERROR)
     {
         test_run_info((unsigned char *)"INIT FAILED     ");
         while (1)
-        { };
+        {
+        };
     }
 
     /* Enabling LEDs here for debug so that for each TX the D1 LED will flash on DW3000 red eval-shield boards. */
-    dwt_setleds(DWT_LEDS_ENABLE | DWT_LEDS_INIT_BLINK) ;
+    dwt_setleds(DWT_LEDS_ENABLE | DWT_LEDS_INIT_BLINK);
 
     /* Configure DW IC. See NOTE 5 below. */
-    if(dwt_configure(&config)) /* if the dwt_configure returns DWT_ERROR either the PLL or RX calibration has failed the host should reset the device */
+    if (dwt_configure(&config)) /* if the dwt_configure returns DWT_ERROR either the PLL or RX calibration has failed the host should reset the device */
     {
         test_run_info((unsigned char *)"CONFIG FAILED     ");
         while (1)
-        { };
+        {
+        };
     }
 
     /* Configure the TX spectrum parameters (power PG delay and PG Count) */
     dwt_configuretxrf(&txconfig_options);
 
+    /* Register the call-backs (SPI CRC error callback is not used). */
+    dwt_setcallbacks(&tx_conf_cb, &rx_ok_cb, &rx_to_cb, &rx_err_cb, NULL, NULL);
+    // dwt_setcallbacks(NULL, &rx_ok_cb, NULL, NULL, NULL, NULL);
+
+    /* Enable wanted interrupts (TX confirmation, RX good frames, RX timeouts and RX errors). */
+    dwt_setinterrupt(SYS_ENABLE_LO_TXFRS_ENABLE_BIT_MASK | SYS_ENABLE_LO_RXFCG_ENABLE_BIT_MASK | SYS_ENABLE_LO_RXFTO_ENABLE_BIT_MASK |
+                         SYS_ENABLE_LO_RXPTO_ENABLE_BIT_MASK | SYS_ENABLE_LO_RXPHE_ENABLE_BIT_MASK | SYS_ENABLE_LO_RXFCE_ENABLE_BIT_MASK |
+                         SYS_ENABLE_LO_RXFSL_ENABLE_BIT_MASK | SYS_ENABLE_LO_RXSTO_ENABLE_BIT_MASK,
+                     0, DWT_ENABLE_INT);
+
+    /*Clearing the SPI ready interrupt*/
+    dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_RCINIT_BIT_MASK | SYS_STATUS_SPIRDY_BIT_MASK);
+
+    /* Install DW IC IRQ handler. */
+    port_set_dwic_isr(dwt_isr);
+
     /* Loop forever sending frames periodically. */
-    while(1)
+    while (1)
     {
         /* Write frame data to DW IC and prepare transmission. See NOTE 3 below.*/
-        dwt_writetxdata(FRAME_LENGTH-FCS_LEN, tx_msg, 0); /* Zero offset in TX buffer. */
+        dwt_writetxdata(FRAME_LENGTH - FCS_LEN, tx_msg, 0); /* Zero offset in TX buffer. */
 
         /* In this example since the length of the transmitted frame does not change,
          * nor the other parameters of the dwt_writetxfctrl function, the
@@ -120,11 +151,15 @@ int simple_tx(void)
 
          * function to access it.*/
         while (!(dwt_read32bitreg(SYS_STATUS_ID) & SYS_STATUS_TXFRS_BIT_MASK))
-        { };
-
+        {
+        };
+        if (checkIrq() != 0)
+        {
+            dwt_isr();
+            test_run_info((unsigned char *)"irq");
+        }
         /* Clear TX frame sent event. */
         dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_TXFRS_BIT_MASK);
-
         test_run_info((unsigned char *)"TX Frame Sent");
 
         /* Execute a delay between transmissions. */
@@ -135,6 +170,128 @@ int simple_tx(void)
     }
 }
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    test_run_info((unsigned char *)"HAL_GPIO_EXTI_Callback");
+    BaseType_t higherPriorityTaskWoken = pdFALSE;
+
+    switch (GPIO_Pin)
+    {
+    case GPIO_PIN_0:
+        xSemaphoreGiveFromISR(irqSemaphore, &higherPriorityTaskWoken);
+
+        HAL_NVIC_ClearPendingIRQ(EXTI0_1_IRQn);
+        break;
+    default:
+        break;
+    }
+    portYIELD_FROM_ISR(higherPriorityTaskWoken);
+}
+
+/*! ------------------------------------------------------------------------------------------------------------------
+ * @fn rx_ok_cb()
+ *
+ * @brief Callback to process RX good frame events
+ *
+ * @param  cb_data  callback data
+ *
+ * @return  none
+ */
+static void rx_ok_cb(const dwt_cb_data_t *cb_data)
+{
+    int i;
+
+    /* Clear local RX buffer to avoid having leftovers from previous receptions. This is not necessary but is included here to aid reading the RX
+    //  * buffer. */
+    // for (i = 0; i < FRAME_LEN_MAX; i++)
+    // {
+    //     rx_buffer[i] = 0;
+    // }
+
+    // /* A frame has been received, copy it to our local buffer. */
+    // if (cb_data->datalength <= FRAME_LEN_MAX)
+    // {
+    //     dwt_readrxdata(rx_buffer, cb_data->datalength, 0);
+    // }
+    test_run_info((unsigned char *)"RX");
+    // test_run_info((unsigned char *)rx_buffer);
+    /* Set corresponding inter-frame delay. */
+    // tx_delay_ms = DFLT_TX_DELAY_MS;
+
+    /* TESTING BREAKPOINT LOCATION #1 */
+}
+
+/*! ------------------------------------------------------------------------------------------------------------------
+ * @fn rx_to_cb()
+ *
+ * @brief Callback to process RX timeout events
+ *
+ * @param  cb_data  callback data
+ *
+ * @return  none
+ */
+static void rx_to_cb(const dwt_cb_data_t *cb_data)
+{
+#ifdef NRF52840_XXAA
+    UNUSED_PARAMETER(cb_data);
+#else
+    UNUSED(cb_data);
+#endif // NRF52840_XXAA
+    /* Set corresponding inter-frame delay. */
+    // tx_delay_ms = RX_TO_TX_DELAY_MS;
+
+    /* TESTING BREAKPOINT LOCATION #2 */
+    test_run_info((unsigned char *)"RX Timeout");
+}
+
+/*! ------------------------------------------------------------------------------------------------------------------
+ * @fn rx_err_cb()
+ *
+ * @brief Callback to process RX error events
+ *
+ * @param  cb_data  callback data
+ *
+ * @return  none
+ */
+static void rx_err_cb(const dwt_cb_data_t *cb_data)
+{
+#ifdef NRF52840_XXAA
+    UNUSED_PARAMETER(cb_data);
+#else
+    UNUSED(cb_data);
+#endif // NRF52840_XXAA
+    /* Set corresponding inter-frame delay. */
+    // tx_delay_ms = RX_ERR_TX_DELAY_MS;
+
+    /* TESTING BREAKPOINT LOCATION #3 */
+    test_run_info((unsigned char *)"RX Error");
+}
+
+/*! ------------------------------------------------------------------------------------------------------------------
+ * @fn tx_conf_cb()
+ *
+ * @brief Callback to process TX confirmation events
+ *
+ * @param  cb_data  callback data
+ *
+ * @return  none
+ */
+static void tx_conf_cb(const dwt_cb_data_t *cb_data)
+{
+#ifdef NRF52840_XXAA
+    UNUSED_PARAMETER(cb_data);
+#else
+    UNUSED(cb_data);
+#endif // NRF52840_XXAA
+    /* This callback has been defined so that a breakpoint can be put here to check it is correctly called but there is actually nothing specific to
+     * do on transmission confirmation in this example. Typically, we could activate reception for the response here but this is automatically handled
+     * by DW IC using DWT_RESPONSE_EXPECTED parameter when calling dwt_starttx().
+     * An actual application that would not need this callback could simply not define it and set the corresponding field to NULL when calling
+     * dwt_setcallbacks(). The ISR will not call it which will allow to save some interrupt processing time. */
+
+    /* TESTING BREAKPOINT LOCATION #4 */
+    test_run_info((unsigned char *)"TX Confirmation");
+}
 #endif
 /*****************************************************************************************************************************************************
  * NOTES:
