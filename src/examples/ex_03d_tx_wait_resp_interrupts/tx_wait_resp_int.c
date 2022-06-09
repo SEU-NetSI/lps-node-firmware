@@ -19,7 +19,8 @@
 #include <port.h>
 #include <shared_defines.h>
 #include <example_selection.h>
-
+#include <FreeRTOS.h>
+#include <semphr.h>
 
 #if defined(TEST_TX_WAIT_RESP_INT)
 
@@ -52,28 +53,28 @@ static dwt_config_t config = {
  *     - byte 10: encoding header (0x43 to indicate no extended ID, temperature, or battery status is carried in the message).
  *     - byte 11: EXT header (0x02 to indicate tag is listening for a response immediately after this message).
  *     - byte 12/13: frame check-sum, automatically set by DW IC. */
-static uint8_t tx_msg[] = {0xC5, 0, 'D', 'E', 'C', 'A', 'W', 'A', 'V', 'E', 0x43, 0x02, 0, 0};
+static uint8_t tx_msg[] = { 0xC5, 1, 'D', 'E', 'C', 'A', 'W', 'A', 'V', 'E', 0x43, 0x02, 0, 0 };
 /* Index to access the sequence number of the blink frame in the tx_msg array. */
 #define BLINK_FRAME_SN_IDX 1
 
 /* Delay from end of transmission to activation of reception, expressed in UWB microseconds (1 uus is 512/499.2 microseconds). See NOTE 3 below. */
-#define TX_TO_RX_DELAY_UUS 60
+#define TX_TO_RX_DELAY_UUS 0
 
 /* Receive response timeout, expressed in UWB microseconds. See NOTE 4 below. */
 #define RX_RESP_TO_UUS 5000
 
 /* Default inter-frame delay period, in milliseconds. */
-#define DFLT_TX_DELAY_MS 1000
+#define DFLT_TX_DELAY_MS 500
 /* Inter-frame delay period in case of RX timeout, in milliseconds.
  * In case of RX timeout, assume the receiver is not present and lower the rate of blink transmission. */
-#define RX_TO_TX_DELAY_MS 3000
+#define RX_TO_TX_DELAY_MS 300
 /* Inter-frame delay period in case of RX error, in milliseconds.
  * In case of RX error, assume the receiver is present but its response has not been received for any reason and retry blink transmission immediately. */
 #define RX_ERR_TX_DELAY_MS 0
 /* Current inter-frame delay period.
  * This global static variable is also used as the mechanism to signal events to the background main loop from the interrupt handler callbacks,
  * which set it to positive delay values. */
-static int32_t tx_delay_ms = -1;
+static int32_t tx_delay_ms = 100;
 
 /* Buffer to store received frame. See NOTE 5 below. */
 static uint8_t rx_buffer[FRAME_LEN_MAX];
@@ -90,14 +91,17 @@ extern dwt_txconfig_t txconfig_options;
 
 static int checkIrq()
 {
-  return HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0);
+    return HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0);
 }
+static SemaphoreHandle_t irqSemaphore;
 
 /**
  * Application entry point.
  */
 int tx_wait_resp_int(void)
-{
+{   
+    static StaticSemaphore_t irqSemaphoreBuffer;
+    irqSemaphore = xSemaphoreCreateBinaryStatic(&irqSemaphoreBuffer);
     /* Display application name on LCD. */
     test_run_info((unsigned char *)APP_NAME);
 
@@ -110,7 +114,9 @@ int tx_wait_resp_int(void)
     Sleep(2); // Time needed for DW3000 to start up (transition from INIT_RC to IDLE_RC, or could wait for SPIRDY event)
 
     while (!dwt_checkidlerc()) /* Need to make sure DW IC is in IDLE_RC before proceeding */
-    {     test_run_info((unsigned char *)"s3");};
+    {     
+        test_run_info((unsigned char *)"s3");
+    };
     test_run_info((unsigned char *)"s2");
     if (dwt_initialise(DWT_DW_INIT) == DWT_ERROR)
     {
@@ -154,25 +160,24 @@ int tx_wait_resp_int(void)
     /* Loop forever sending and receiving frames periodically. */
     while (1)
     {
-        test_run_info((unsigned char *)"s6");
         /* Write frame data to DW IC and prepare transmission. See NOTE 7 below. */
         dwt_writetxdata(sizeof(tx_msg), tx_msg, 0); /* Zero offset in TX buffer. */
-        dwt_writetxfctrl(sizeof(tx_msg), 0, 0); /* Zero offset in TX buffer, no ranging. */
+        dwt_writetxfctrl(sizeof(tx_msg), 0, 0);     /* Zero offset in TX buffer, no ranging. */
 
         /* Start transmission, indicating that a response is expected so that reception is enabled immediately after the frame is sent. */
-        // dwt_starttx(DWT_START_TX_IMMEDIATE | DWT_RESPONSE_EXPECTED);
-        dwt_rxenable(DWT_START_RX_IMMEDIATE);
-        test_run_info((unsigned char *) "send");
-        while(1) {
-            do{
-                // test_run_info((unsigned char *) "irq");
-                dwt_isr();
-            } while(checkIrq() == 0);
+        int res = dwt_starttx(DWT_START_TX_IMMEDIATE | DWT_RESPONSE_EXPECTED);
+        if (res == DWT_ERROR) {
+            test_run_info((unsigned char *)"==============tx error============");
         }
+
         /* Wait for any RX event. */
-        while (tx_delay_ms == -1)
-        {        test_run_info((unsigned char *)"s7"); };
-                test_run_info((unsigned char *) "sendaf");
+        while (tx_delay_ms == -1) {
+            test_run_info((unsigned char *)"irq");
+            if (checkIrq() != 0) {
+                dwt_isr();
+            }
+        };
+
         /* Execute the defined delay before next transmission. */
         if (tx_delay_ms > 0)
         {
@@ -184,9 +189,26 @@ int tx_wait_resp_int(void)
 
         /* Reset the TX delay and event signaling mechanism ready to await the next event. */
         tx_delay_ms = -1;
+        test_run_info((unsigned char *)"============func_end==========");
     }
 }
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    test_run_info((unsigned char *)"HAL_GPIO_EXTI_Callback");
+    BaseType_t higherPriorityTaskWoken = pdFALSE;
+
+    switch (GPIO_Pin)
+    {
+    case GPIO_PIN_0:
+        xSemaphoreGiveFromISR(irqSemaphore, &higherPriorityTaskWoken);
+        HAL_NVIC_ClearPendingIRQ(EXTI0_1_IRQn);
+        break;
+    default:
+        break;
+    }
+    portYIELD_FROM_ISR(higherPriorityTaskWoken);
+}
 /*! ------------------------------------------------------------------------------------------------------------------
  * @fn rx_ok_cb()
  *

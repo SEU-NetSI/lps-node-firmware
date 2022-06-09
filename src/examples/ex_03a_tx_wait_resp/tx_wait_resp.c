@@ -165,7 +165,7 @@ int tx_wait_resp(void)
 
             /* At this point, received frame can be examined in global "rx_buffer". An actual application would, for example, start by checking that
              * the format and/or data of the response are the expected ones. A developer might put a breakpoint here to examine this frame. */
-
+            test_run_info((unsigned char *)rx_buffer);
             /* Clear good RX frame event in the DW IC status register. */
             dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_RXFCG_BIT_MASK);
         }
@@ -176,7 +176,6 @@ int tx_wait_resp(void)
             dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_ALL_RX_TO | SYS_STATUS_ALL_RX_ERR);
         }
         test_run_info((unsigned char *)"round");
-        test_run_info((unsigned char *)rx_buffer);
         /* Execute a delay between transmissions. */
         Sleep(TX_DELAY_MS);
 
