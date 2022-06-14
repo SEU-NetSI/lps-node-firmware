@@ -1701,8 +1701,8 @@ void dwt_settxantennadelay(uint16_t txDelay)
  *                         The extended PHR mode allows to transmit frames of up to 1023 bytes (including 2 byte CRC)
  *                         if > 127 is programmed, DWT_PHRMODE_EXT needs to be set in the phrMode configuration
  *                         see dwt_configure function
- * @param txDataBytes    - Pointer to the user’s buffer containing the data to send.
- * @param txBufferOffset - This specifies an offset in the DW IC’s TX Buffer at which to start writing data.
+ * @param txDataBytes    - Pointer to the userï¿½s buffer containing the data to send.
+ * @param txBufferOffset - This specifies an offset in the DW ICï¿½s TX Buffer at which to start writing data.
  *
  * output parameters
  *
@@ -3784,17 +3784,7 @@ int dwt_starttx(uint8_t mode)
  */
 void dwt_forcetrxoff(void)
 {
-    decaIrqStatus_t stat ;
-    // Need to beware of interrupts occurring in the middle of following command cycle
-    // We can disable the radio, but before the status is cleared an interrupt can be set (e.g. the
-    // event has just happened before the radio was disabled)
-    // thus we need to disable interrupt during this operation
-    stat = decamutexon();
-
     dwt_writefastCMD(CMD_TXRXOFF);
-
-    // Enable/restore interrupts again...
-    decamutexoff(stat);
 } // end deviceforcetrxoff()
 
 /*! ------------------------------------------------------------------------------------------------------------------
@@ -3808,7 +3798,7 @@ void dwt_forcetrxoff(void)
  * @param enable - 1 to enable SNIFF mode, 0 to disable. When 0, all other parameters are not taken into account.
  * @param timeOn - duration of receiver ON phase, expressed in multiples of PAC size. The counter automatically adds 1 PAC
  *                 size to the value set. Min value that can be set is 1 (i.e. an ON time of 2 PAC size), max value is 15.
- * @param timeOff - duration of receiver OFF phase, expressed in multiples of 128/125 µs (~1 µs). Max value is 255.
+ * @param timeOff - duration of receiver OFF phase, expressed in multiples of 128/125 ï¿½s (~1 ï¿½s). Max value is 255.
  *
  * output parameters
  *
@@ -3955,11 +3945,6 @@ void dwt_setpreambledetecttimeout(uint16_t timeout)
  */
 void dwt_setinterrupt(uint32_t bitmask_lo, uint32_t bitmask_hi, dwt_INT_options_e INT_options)
 {
-    decaIrqStatus_t stat ;
-
-    // Need to beware of interrupts occurring in the middle of following read modify write cycle
-    stat = decamutexon();
-
     if(INT_options == DWT_ENABLE_INT_ONLY)
     {
         dwt_write32bitreg(SYS_ENABLE_LO_ID, bitmask_lo); // New value
@@ -3978,8 +3963,6 @@ void dwt_setinterrupt(uint32_t bitmask_lo, uint32_t bitmask_hi, dwt_INT_options_
             dwt_and32bitoffsetreg(SYS_ENABLE_HI_ID, 0, (uint32_t)(~bitmask_hi)); // Clear the bits
         }
     }
-
-    decamutexoff(stat);
 }
 
 /*! ------------------------------------------------------------------------------------------------------------------
@@ -4385,7 +4368,7 @@ float dwt_convertrawtemperature(uint8_t raw_temp)
 {
     float realtemp;
 
-    // the User Manual formula is: Temperature (°C) = ( (SAR_LTEMP – OTP_READ(Vtemp @ 20°C) ) x 1.05)        // Vtemp @ 20°C
+    // the User Manual formula is: Temperature (ï¿½C) = ( (SAR_LTEMP ï¿½ OTP_READ(Vtemp @ 20ï¿½C) ) x 1.05)        // Vtemp @ 20ï¿½C
     realtemp = (float)((raw_temp - pdw3000local->tempP) * 1.05f) + 20.0f;
     return realtemp;
 }

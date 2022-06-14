@@ -63,8 +63,6 @@ int writetospiwithcrc(
                 const uint8_t *bodyBuffer,
                 uint8_t       crc8)
 {
-    decaIrqStatus_t  stat ;
-    stat = decamutexon() ;
     while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
 
     HAL_GPIO_WritePin(DW_NSS_GPIO_Port, DW_NSS_Pin, GPIO_PIN_RESET); /**< Put chip select line low */
@@ -74,7 +72,6 @@ int writetospiwithcrc(
     HAL_SPI_Transmit(&hspi1, (uint8_t *)&crc8, 1, 10);      /* Send data in polling mode */
 
     HAL_GPIO_WritePin(DW_NSS_GPIO_Port, DW_NSS_Pin, GPIO_PIN_SET); /**< Put chip select line high */
-    decamutexoff(stat);
     return 0;
 } // end writetospiwithcrc()
 
@@ -92,7 +89,6 @@ int writetospi(uint16_t       headerLength,
                const uint8_t  *bodyBuffer)
 {
     decaIrqStatus_t  stat ;
-    stat = decamutexon() ;
 
     while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
 
@@ -104,7 +100,6 @@ int writetospi(uint16_t       headerLength,
         HAL_SPI_Transmit(&hspi1, (uint8_t *)bodyBuffer,   bodyLength, HAL_MAX_DELAY);     /* Send data in polling mode */
 
     HAL_GPIO_WritePin(DW_NSS_GPIO_Port, DW_NSS_Pin, GPIO_PIN_SET); /**< Put chip select line high */
-    decamutexoff(stat);
     return 0;
 } // end writetospi()
 
@@ -151,9 +146,6 @@ int readfromspi(uint16_t  headerLength,
 {
     int i;
 
-    decaIrqStatus_t  stat ;
-    stat = decamutexon() ;
-
     /* Blocking: Check whether previous transfer has been finished */
     while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
 
@@ -187,8 +179,6 @@ int readfromspi(uint16_t  headerLength,
     }
 
     HAL_GPIO_WritePin(DW_NSS_GPIO_Port, DW_NSS_Pin, GPIO_PIN_SET); /**< Put chip select line high */
-
-    decamutexoff(stat);
 
     return 0;
 } // end readfromspi()

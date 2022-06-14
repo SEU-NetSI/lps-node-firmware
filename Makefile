@@ -55,7 +55,6 @@ OBJS+=$(foreach mod, $(USB_CDC), Middlewares/ST/STM32_USB_Device_Library/Class/C
 #libdw3000
 INCLUDES+=-Ilibdw3000/decadriver -Ilibdw3000/platform -Ilibdw3000/config_options.h
 OBJS+=libdw3000/decadriver/deca_device.o \
-libdw3000/platform/deca_mutex.o \
 libdw3000/platform/deca_sleep.o \
 libdw3000/platform/deca_spi.o \
 libdw3000/platform/port.o \
