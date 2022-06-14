@@ -15,9 +15,9 @@
 #include <deca_device_api.h>
 #include <deca_regs.h>
 #include <deca_spi.h>
-#include <port.h>
+#include <port_dw3000.h>
 #include <shared_defines.h>
-#include <example_selection.h>
+#include <examples/example_selection.h>
 
 
 #if defined(TEST_SIMPLE_TX_STS_SDC)
@@ -161,7 +161,7 @@ int simple_tx_sts_sdc(void)
  *
  * 1. The device ID is a hard coded constant in the blink to keep the example simple but for a real product every device should have a unique ID.
  *    For development purposes it is possible to generate a DW IC unique ID by combining the Lot ID & Part Number values programmed into the
- *    DW IC during its manufacture. However there is no guarantee this will not conflict with someone else’s implementation. We recommended that
+ *    DW IC during its manufacture. However there is no guarantee this will not conflict with someone elseï¿½s implementation. We recommended that
  *    customers buy a block of addresses from the IEEE Registration Authority for their production items. See "EUI" in the DW IC User Manual.
  * 2. In a real application, for optimum performance within regulatory limits, it may be necessary to set TX pulse bandwidth and TX power, (using
  *    the dwt_configuretxrf API call) to per device calibrated values saved in the target system or the DW IC OTP memory.
@@ -201,7 +201,7 @@ int simple_tx_sts_sdc(void)
  *     - byte 4 -> 17: response message transmission timestamp.
  * 8. Source and destination addresses are hard coded constants to keep the example simple but for a real product every device should have a unique ID.
  *    For development purposes it is possible to generate a DW IC unique ID by combining the Lot ID & Part Number values programmed into the DW IC
- *    during its manufacture. However there is no guarantee this will not conflict with someone else’s implementation. We recommended that customers
+ *    during its manufacture. However there is no guarantee this will not conflict with someone elseï¿½s implementation. We recommended that customers
  *    buy a block of addresses from the IEEE Registration Authority for their production items. See "EUI" in the DW IC User Manual.
  * 9. Desired configuration by user may be different to the current programmed configuration. dwt_configure is called to set desired
  *    configuration.

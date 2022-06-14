@@ -10,7 +10,7 @@
  *
  *           This example utilises the 802.15.4z STS to accomplish secure timestamps between the initiator and responder. A 32-bit STS counter
  *           is part of the STS IV used to generate the scrambled timestamp sequence (STS) in the transmitted packet and to cross correlate in the
- *           receiver. This count normally advances by 1 for every 1024 chips (~2µs) of STS in BPRF mode, and by 1 for every 5124 chips (~1µs) of STS
+ *           receiver. This count normally advances by 1 for every 1024 chips (~2ï¿½s) of STS in BPRF mode, and by 1 for every 5124 chips (~1ï¿½s) of STS
  *           in HPRF mode. If both devices (initiator and responder) have count values that are synced, then the communication between devices should
  *           result in secure timestamps which can be used to calculate distance. If not, then the devices need to re-sync their STS counter values.
  *           In this example, the initiator will send a plain-text value of it's 32-bit STS counter inside the "poll" frame. The receiver first
@@ -29,10 +29,10 @@
 #include <deca_device_api.h>
 #include <deca_regs.h>
 #include <deca_spi.h>
-#include <port.h>
+#include <port_dw3000.h>
 #include <shared_defines.h>
 #include <shared_functions.h>
-#include <example_selection.h>
+#include <examples/example_selection.h>
 #include <config_options.h>
 
 #if defined(TEST_SS_TWR_RESPONDER_STS)

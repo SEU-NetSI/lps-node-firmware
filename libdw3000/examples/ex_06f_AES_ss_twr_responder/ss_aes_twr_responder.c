@@ -22,11 +22,11 @@
 #include <deca_device_api.h>
 #include <deca_regs.h>
 #include <deca_spi.h>
-#include <port.h>
+#include <port_dw3000.h>
 #include <shared_defines.h>
 #include <shared_functions.h>
 #include <mac_802_15_4.h>
-#include <example_selection.h>
+#include <examples/example_selection.h>
 
 
 #if defined(TEST_AES_SS_TWR_RESPONDER)

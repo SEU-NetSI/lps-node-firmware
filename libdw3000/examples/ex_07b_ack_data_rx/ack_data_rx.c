@@ -18,9 +18,9 @@
 #include <deca_device_api.h>
 #include <deca_regs.h>
 #include <deca_spi.h>
-#include <port.h>
+#include <port_dw3000.h>
 #include <shared_defines.h>
-#include <example_selection.h>
+#include <examples/example_selection.h>
 
 
 #if defined(TEST_ACK_DATA_RX)
@@ -167,7 +167,7 @@ int ack_data_rx(void)
  *
  * 1. PAN ID and short address are hard coded constants to keep the example simple but for a real product every device should have a unique ID.
  *    For development purposes it is possible to generate a DW IC unique ID by combining the Lot ID & Part Number values programmed into the DW IC
- *    during its manufacture. However there is no guarantee this will not conflict with someone else’s implementation. We recommended that customers
+ *    during its manufacture. However there is no guarantee this will not conflict with someone elseï¿½s implementation. We recommended that customers
  *    buy a block of addresses from the IEEE Registration Authority for their production items.
  * 2. In this example, maximum frame length is set to 127 bytes which is 802.15.4z UWB standard maximum frame length. DW IC supports an extended frame
  *    length (up to 1023 bytes long) mode which is not used in this example.

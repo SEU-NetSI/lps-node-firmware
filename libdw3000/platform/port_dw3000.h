@@ -12,8 +12,8 @@
  */
 
 
-#ifndef PORT_H_
-#define PORT_H_
+#ifndef PORT_DW3000_H_
+#define PORT_DW3000_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,7 +23,7 @@ extern "C" {
 #include <string.h>
 //#include <compiler.h>
 
-#include <stm32f4xx_hal.h>
+#include <stm32f0xx_hal.h>
 
 #define EVB1000_LED_SUPPORT 0
 #define EVB1000_LCD_SUPPORT 0

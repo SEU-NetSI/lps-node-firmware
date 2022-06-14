@@ -17,9 +17,9 @@
 #include <deca_device_api.h>
 #include <deca_regs.h>
 #include <deca_spi.h>
-#include <port.h>
+#include <port_dw3000.h>
 #include <shared_defines.h>
-#include <example_selection.h>
+#include <examples/example_selection.h>
 
 
 #if defined(TEST_RX_SEND_RESP)

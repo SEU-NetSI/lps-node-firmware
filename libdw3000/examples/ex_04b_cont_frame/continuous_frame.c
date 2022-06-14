@@ -16,8 +16,8 @@
 #include <deca_device_api.h>
 #include <deca_regs.h>
 #include <deca_spi.h>
-#include <port.h>
-#include <example_selection.h>
+#include <port_dw3000.h>
+#include <examples/example_selection.h>
 
 
 #if defined(TEST_CONTINUOUS_FRAME)
@@ -121,14 +121,14 @@ int continuous_frame_example(void)
  * NOTES:
  *
  * 1. Continuous frame mode is typically used to tune transmit power for regulatory purposes. This example has been designed to reproduce the use case
- *    of a tag blinking at a high rate: the blink length is around 180 µs in this configuration, emitted once per millisecond. In this configuration,
+ *    of a tag blinking at a high rate: the blink length is around 180 ï¿½s in this configuration, emitted once per millisecond. In this configuration,
  *    the frame's transmission power can be increased while still complying with regulations. For more details about the management of TX power, the
  *    user is referred to DW IC User Manual.
  * 2. The user is referred to DW IC User Manual for references values applicable to different channels and/or PRF. Those reference values may need to
  *    be tuned for optimum performance and regulatory approval depending on the target product design.
  * 3. The device ID is a hard coded constant in the blink to keep the example simple but for a real product every device should have a unique ID.
  *    For development purposes it is possible to generate a DW IC unique ID by combining the Lot ID & Part Number values programmed into the
- *    DW IC during its manufacture. However there is no guarantee this will not conflict with someone else’s implementation. We recommended that
+ *    DW IC during its manufacture. However there is no guarantee this will not conflict with someone elseï¿½s implementation. We recommended that
  *    customers buy a block of addresses from the IEEE Registration Authority for their production items. See "EUI" in the DW IC User Manual.
  * 4. In this example, the DW IC is left in INIT state after calling dwt_initialise(), because only the slow SPI speed is used, i.e. <= 6 MHz
  * 5. The user is referred to DecaRanging ARM application (distributed with EVK1000 product) for additional practical example of usage, and to the

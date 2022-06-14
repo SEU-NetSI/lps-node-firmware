@@ -11,7 +11,7 @@
  */
 
 #include <assert.h>
-#include <example_selection.h>
+#include <examples/example_selection.h>
 #include "examples_defines.h"
 
 example_ptr example_pointer;

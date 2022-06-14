@@ -13,8 +13,8 @@
 
 #include <stdio.h>
 #include <deca_device_api.h>
-#include <port.h>
-#include <example_selection.h>
+#include <port_dw3000.h>
+#include <examples/example_selection.h>
 
 
 #if defined(TEST_OTP_WRITE)

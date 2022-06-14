@@ -15,8 +15,8 @@
 #include <deca_device_api.h>
 #include <deca_regs.h>
 #include <deca_spi.h>
-#include <port.h>
-#include <example_selection.h>
+#include <port_dw3000.h>
+#include <examples/example_selection.h>
 
 
 #if defined(TEST_CONTINUOUS_WAVE)

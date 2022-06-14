@@ -14,8 +14,8 @@
 #include <deca_device_api.h>
 #include <deca_regs.h>
 #include <deca_spi.h>
-#include <port.h>
-#include <example_selection.h>
+#include <port_dw3000.h>
+#include <examples/example_selection.h>
 
 
 #if defined(TEST_TX_SLEEP_AUTO)
@@ -150,7 +150,7 @@ int tx_sleep_auto(void)
  *
  * 1. The device ID is a hard coded constant in the blink to keep the example simple but for a real product every device should have a unique ID.
  *    For development purposes it is possible to generate a DW IC unique ID by combining the Lot ID & Part Number values programmed into the
- *    DW IC during its manufacture. However there is no guarantee this will not conflict with someone else’s implementation. We recommended that
+ *    DW IC during its manufacture. However there is no guarantee this will not conflict with someone elseï¿½s implementation. We recommended that
  *    customers buy a block of addresses from the IEEE Registration Authority for their production items. See "EUI" in the DW IC User Manual.
  * 2. The chosen method for waking the DW IC up here is by maintaining SPI chip select line low for at least 500 us. This means that we need a buffer
  *    to collect the data that DW IC outputs during this dummy SPI transaction. The length of the transaction, and then the time for which the SPI
