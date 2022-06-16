@@ -140,6 +140,11 @@ ITStatus EXTI_GetITEnStatus(IRQn_Type IRQn)
  *          part of DW IC by driving this pin low.
  *          Note, the DW_RESET pin should not be driven high externally.
  * */
+#define DW_RESET_Pin GPIO_PIN_12
+#define GPIO_SPEED_FREQ_LOW 0
+#define GPIO_SPEED_FREQ_HIGH 1
+#define DW_RESET_GPIO_Port GPIOB
+
 void reset_DWIC(void)
 {
     GPIO_InitTypeDef    GPIO_InitStruct;
@@ -178,12 +183,12 @@ void setup_DWICRSTnIRQ(int enable)
         GPIO_InitStruct.Pull = GPIO_NOPULL;
         HAL_GPIO_Init(DW_RESET_GPIO_Port, &GPIO_InitStruct);
 
-        HAL_NVIC_EnableIRQ(EXTI0_IRQn);     //pin #0 -> EXTI #0
-        HAL_NVIC_SetPriority(EXTI0_IRQn, 5, 0);
+        HAL_NVIC_EnableIRQ(EXTI0_1_IRQn);     //pin #0 -> EXTI #0
+        HAL_NVIC_SetPriority(EXTI0_1_IRQn, 5, 0);
     }
     else
     {
-        HAL_NVIC_DisableIRQ(EXTI0_IRQn);    //pin #0 -> EXTI #0
+        HAL_NVIC_DisableIRQ(EXTI0_1_IRQn);    //pin #0 -> EXTI #0
 
         //put the pin back to tri-state ... as
         //output open-drain (not active)
@@ -206,12 +211,12 @@ void setup_DWICRSTnIRQ(int enable)
 * output -None
 *
 */
-void wakeup_device_with_io(void)
-{
-    SET_WAKEUP_PIN_IO_HIGH;
-    WAIT_500uSEC;
-    SET_WAKEUP_PIN_IO_LOW;
-}
+// void wakeup_device_with_io(void)
+// {
+//     SET_WAKEUP_PIN_IO_HIGH;
+//     WAIT_500uSEC;
+//     SET_WAKEUP_PIN_IO_LOW;
+// }
 
 /*! ------------------------------------------------------------------------------------------------------------------
 * @fn make_very_short_wakeup_io()
@@ -223,15 +228,15 @@ void wakeup_device_with_io(void)
 * output -None
 *
 */
-void make_very_short_wakeup_io(void)
-{
-    uint8_t   cnt;
+// void make_very_short_wakeup_io(void)
+// {
+//     uint8_t   cnt;
 
-    SET_WAKEUP_PIN_IO_HIGH;
-    for (cnt=0;cnt<10;cnt++)
-        __NOP();
-    SET_WAKEUP_PIN_IO_LOW;
-}
+//     SET_WAKEUP_PIN_IO_HIGH;
+//     for (cnt=0;cnt<10;cnt++)
+//         __NOP();
+//     SET_WAKEUP_PIN_IO_LOW;
+// }
 
 
 /* @fn      port_is_boot1_low
@@ -408,6 +413,8 @@ void port_LCD_RW_clear(void)
  *                              IRQ section
  *
  *******************************************************************************/
+#define DW_IRQn_GPIO_Port EXTI0_1_IRQn
+#define DW_IRQn_Pin GPIO_PIN_0
 
 /* @fn         HAL_GPIO_EXTI_Callback
  * @brief      EXTI line detection callback from HAL layer

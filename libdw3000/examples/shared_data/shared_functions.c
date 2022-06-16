@@ -15,7 +15,7 @@
 #include <deca_device_api.h>
 #include <shared_defines.h>
 #include <shared_functions.h>
-#include <port.h>
+#include <port_dw3000.h>
 #include <config_options.h>
 
 extern dwt_config_t config_options;

@@ -48,6 +48,8 @@
 #include "test_support.h"
 #include "production_test.h"
 
+#include "deca_device_api.h"
+
 #define POWER_LEVELS 10
 
 const uint8_t *uid = (uint8_t *)MCU_ID_ADDRESS;
@@ -122,6 +124,8 @@ static void main_task(void *pvParameters)
 
   while (1)
   {
+    uint32_t id = dwt_readdevid();
+  	printf("ID:%08x\r\n", id);
     usbcommPrintWelcomeMessage();
     ledTick();
     handleButton();

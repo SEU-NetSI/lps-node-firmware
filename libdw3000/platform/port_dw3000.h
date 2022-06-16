@@ -97,7 +97,8 @@ typedef enum
  *******************************************************************************/
 
 
-#define DECAIRQ_EXTI_IRQn       (EXTI15_10_IRQn)
+// #define DECAIRQ_EXTI_IRQn       (EXTI15_10_IRQn)
+#define DECAIRQ_EXTI_IRQn           EXTI0_1_IRQn
 
 #define DW_RSTn                     DW_RESET_Pin
 #define DW_RSTn_GPIO                DW_RESET_GPIO_Port

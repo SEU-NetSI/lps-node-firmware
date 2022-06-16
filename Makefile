@@ -57,7 +57,7 @@ INCLUDES+=-Ilibdw3000/decadriver -Ilibdw3000/platform -Ilibdw3000/config_options
 OBJS+=libdw3000/decadriver/deca_device.o \
 libdw3000/platform/deca_sleep.o \
 libdw3000/platform/deca_spi.o \
-libdw3000/platform/port.o \
+libdw3000/platform/port_dw3000.o \
 libdw3000/config_options.o
 
 # libdw3000 examples
