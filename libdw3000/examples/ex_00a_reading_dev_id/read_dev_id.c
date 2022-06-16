@@ -36,22 +36,23 @@ int read_dev_id(void)
 
     /* Configure SPI rate, DW3000 supports up to 38 MHz */
     port_set_dw_ic_spi_fastrate();
-
+    test_run_info((unsigned char *)"Reset SPI OK");
     /* Reset DW IC */
     reset_DWIC(); /* Target specific drive of RSTn line into DW IC low for a period. */
-
+    test_run_info((unsigned char *)"Reset DW3000 OK");
     Sleep(2); // Time needed for DW3000 to start up (transition from INIT_RC to IDLE_RC, or could wait for SPIRDY event)
-
+    while (1) {
+        if ((err=dwt_check_dev_id())==DWT_SUCCESS)
+        {
+            test_run_info((unsigned char *)"DEV ID OK");
+        }
+        else
+        {
+            test_run_info((unsigned char *)"DEV ID FAILED");
+        }
+        HAL_Delay(1000);
+    }
     /* Reads and validate device ID returns DWT_ERROR if it does not match expected else DWT_SUCCESS */
-    if ((err=dwt_check_dev_id())==DWT_SUCCESS)
-    {
-        test_run_info((unsigned char *)"DEV ID OK");
-    }
-    else
-    {
-    	test_run_info((unsigned char *)"DEV ID FAILED");
-    }
-
     return err;
 }
 

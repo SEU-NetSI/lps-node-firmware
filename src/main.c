@@ -49,6 +49,7 @@
 #include "production_test.h"
 
 #include "deca_device_api.h"
+#include "examples_defines.h"
 
 #define POWER_LEVELS 10
 
@@ -56,6 +57,22 @@ const uint8_t *uid = (uint8_t *)MCU_ID_ADDRESS;
 
 static void handleButton(void);
 static void bootload(void);
+
+void test_run_info(unsigned char *data)
+{
+    printf("%s\r\n", data);
+}
+
+static StaticTask_t xExampleTask;
+static StackType_t ucExampleStack[configMINIMAL_STACK_SIZE];
+
+static void example_task(void *pvParameters)
+{
+  printf("ID:%08x\r\n", dwt_readdevid());
+  printf("====examples====\r\n");
+  build_examples();
+  example_pointer();
+}
 
 void systemInit()
 {
@@ -112,6 +129,8 @@ void systemInit()
   ledOff(ledMode);
 
   usbcommSetSystemStarted(true);
+
+  xTaskCreateStatic(example_task, "exampleTask", configMINIMAL_STACK_SIZE, NULL, configMAX_PRIORITIES - 3, ucExampleStack, &xExampleTask);
 }
 
 static StaticTask_t xMainTask;
@@ -124,8 +143,6 @@ static void main_task(void *pvParameters)
 
   while (1)
   {
-    uint32_t id = dwt_readdevid();
-  	printf("ID:%08x\r\n", id);
     usbcommPrintWelcomeMessage();
     ledTick();
     handleButton();
@@ -153,7 +170,8 @@ int main()
   vTaskStartScheduler();
 
   // Should never reach there
-  while (1);
+  while (1)
+    ;
 
   return 0;
 }
@@ -245,5 +263,6 @@ void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer, StackT
 void vAssertCalled(unsigned long ulLine, const char *const pcFileName)
 {
   printf("Assert failed at %s:%lu", pcFileName, ulLine);
-  while (1);
+  while (1)
+    ;
 }

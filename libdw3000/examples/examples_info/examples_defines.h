@@ -8,7 +8,7 @@ extern "C" {
 
 typedef int (*example_ptr)(void);
 void build_examples(void);
-
+example_ptr example_pointer;
 
 #ifdef __cplusplus
 }
