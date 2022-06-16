@@ -19,7 +19,7 @@
 
 extern  SPI_HandleTypeDef hspi1;    /*clocked from 72MHz*/
 #define DW_NSS_GPIO_Port GPIOA
-#define  DW_NSS_Pin GPIO_PIN_4
+#define DW_NSS_Pin GPIO_PIN_4
 
 /****************************************************************************//**
  *
@@ -48,7 +48,36 @@ int closespi(void)
     return 0;
 } // end closespi()
 
+// Aligned buffer of 128bytes
+// This is used as a "scratch" buffer to the SPI transfers
+// The problem is that the Cortex-m0 only supports 2Bytes-aligned memory access
+uint16_t alignedBuffer[64];
 
+static void spiWrite(const void *header, size_t headerLength,
+                                      const void* data, size_t dataLength)
+{
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 0);
+
+  memcpy(alignedBuffer, header, headerLength);
+  HAL_SPI_Transmit(&hspi1, (uint8_t *)alignedBuffer, headerLength, HAL_MAX_DELAY);
+  memcpy(alignedBuffer, data, dataLength);
+  HAL_SPI_Transmit(&hspi1, (uint8_t *)alignedBuffer, dataLength, HAL_MAX_DELAY);
+
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 1);
+}
+
+static void spiRead(const void *header, size_t headerLength,
+                                     void* data, size_t dataLength)
+{
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 0);
+
+  memcpy(alignedBuffer, header, headerLength);
+  HAL_SPI_Transmit(&hspi1, (uint8_t *)alignedBuffer, headerLength, HAL_MAX_DELAY);
+  HAL_SPI_Receive(&hspi1, (uint8_t *)alignedBuffer, dataLength, HAL_MAX_DELAY);
+  memcpy(data, alignedBuffer, dataLength);
+
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, 1);
+}
 
 
 /*! ------------------------------------------------------------------------------------------------------------------
@@ -90,18 +119,7 @@ int writetospi(uint16_t       headerLength,
                uint16_t       bodyLength,
                const uint8_t  *bodyBuffer)
 {
-    decaIrqStatus_t  stat ;
-
-    while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
-
-    HAL_GPIO_WritePin(DW_NSS_GPIO_Port, DW_NSS_Pin, GPIO_PIN_RESET); /**< Put chip select line low */
-
-    HAL_SPI_Transmit(&hspi1, (uint8_t *)headerBuffer, headerLength, HAL_MAX_DELAY); /* Send header in polling mode */
-
-    if(bodyLength != 0)
-        HAL_SPI_Transmit(&hspi1, (uint8_t *)bodyBuffer,   bodyLength, HAL_MAX_DELAY);     /* Send data in polling mode */
-
-    HAL_GPIO_WritePin(DW_NSS_GPIO_Port, DW_NSS_Pin, GPIO_PIN_SET); /**< Put chip select line high */
+    spiWrite(headerBuffer, headerLength, bodyBuffer, bodyLength);
     return 0;
 } // end writetospi()
 
@@ -145,43 +163,8 @@ int readfromspi(uint16_t  headerLength,
                 uint8_t   *headerBuffer,
                 uint16_t  readlength,
                 uint8_t   *readBuffer)
-{
-    int i;
-
-    /* Blocking: Check whether previous transfer has been finished */
-    while (HAL_SPI_GetState(&hspi1) != HAL_SPI_STATE_READY);
-
-    HAL_GPIO_WritePin(DW_NSS_GPIO_Port, DW_NSS_Pin, GPIO_PIN_RESET); /**< Put chip select line low */
-
-    /* Send header */
-    for(i=0; i<headerLength; i++)
-    {
-        HAL_SPI_Transmit(&hspi1, (uint8_t*)&headerBuffer[i], 1, HAL_MAX_DELAY); //No timeout
-    }
-
-    /* for the data buffer use LL functions directly as the HAL SPI read function
-     * has issue reading single bytes */
-    while(readlength-- > 0)
-    {
-        /* Wait until TXE flag is set to send data */
-        while(__HAL_SPI_GET_FLAG(&hspi1, SPI_FLAG_TXE) == RESET)
-        {
-        }
-
-        hspi1.Instance->DR = 0; /* set output to 0 (MOSI), this is necessary for
-        e.g. when waking up DW3000 from DEEPSLEEP via dwt_spicswakeup() function.
-        */
-
-        /* Wait until RXNE flag is set to read data */
-        while(__HAL_SPI_GET_FLAG(&hspi1, SPI_FLAG_RXNE) == RESET)
-        {
-        }
-
-        (*readBuffer++) = hspi1.Instance->DR;  //copy data read form (MISO)
-    }
-
-    HAL_GPIO_WritePin(DW_NSS_GPIO_Port, DW_NSS_Pin, GPIO_PIN_SET); /**< Put chip select line high */
-
+{   
+    spiRead(headerBuffer, headerLength, readBuffer, readlength);
     return 0;
 } // end readfromspi()
 
