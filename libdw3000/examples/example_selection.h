@@ -40,9 +40,9 @@ extern "C" {
 //#define TEST_SIMPLE_TX_AES
 //#define TEST_SIMPLE_RX_AES
 
-//#define TEST_TX_WAIT_RESP
-//#define TEST_TX_WAIT_RESP_INT
-//#define TEST_RX_SEND_RESP
+// #define TEST_TX_WAIT_RESP
+// #define TEST_TX_WAIT_RESP_INT
+// #define TEST_RX_SEND_RESP
 
 //#define TEST_CONTINUOUS_WAVE
 //#define TEST_CONTINUOUS_FRAME
@@ -51,7 +51,7 @@ extern "C" {
 //#define TEST_DS_TWR_RESPONDER_STS
 
 // #define TEST_DS_TWR_INITIATOR
-#define TEST_DS_TWR_RESPONDER
+// #define TEST_DS_TWR_RESPONDER
 
 //#define TEST_DS_TWR_STS_SDC_INITIATOR
 //#define TEST_DS_TWR_STS_SDC_RESPONDER

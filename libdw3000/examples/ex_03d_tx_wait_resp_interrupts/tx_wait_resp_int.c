@@ -173,6 +173,25 @@ int tx_wait_resp_int(void)
     }
 }
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+    test_run_info((unsigned char *)"HAL_GPIO_EXTI_Callback");
+
+    switch (GPIO_Pin)
+    {
+        case GPIO_PIN_0:
+            // process_deca_irq();
+            while(port_CheckEXT_IRQ() != 0)
+            {
+                dwt_isr();
+            }
+            HAL_NVIC_ClearPendingIRQ(EXTI0_1_IRQn);
+            break;
+        default:
+            break;
+    }
+}
+
 /*! ------------------------------------------------------------------------------------------------------------------
  * @fn rx_ok_cb()
  *

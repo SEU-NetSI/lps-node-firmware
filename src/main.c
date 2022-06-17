@@ -51,6 +51,7 @@
 #include "deca_device_api.h"
 #include "examples_defines.h"
 
+#include "uwb.h"
 #define POWER_LEVELS 10
 
 const uint8_t *uid = (uint8_t *)MCU_ID_ADDRESS;
@@ -130,7 +131,9 @@ void systemInit()
 
   usbcommSetSystemStarted(true);
 
-  xTaskCreateStatic(example_task, "exampleTask", configMINIMAL_STACK_SIZE, NULL, configMAX_PRIORITIES - 3, ucExampleStack, &xExampleTask);
+  // xTaskCreateStatic(example_task, "exampleTask", configMINIMAL_STACK_SIZE, NULL, configMAX_PRIORITIES - 3, ucExampleStack, &xExampleTask);
+  uwbInit();
+  uwbStart();
 }
 
 static StaticTask_t xMainTask;

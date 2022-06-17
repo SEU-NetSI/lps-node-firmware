@@ -104,7 +104,7 @@ typedef enum
 #define DW_RSTn_GPIO                DW_RESET_GPIO_Port
 
 #define DECAIRQ                     DW_IRQn_Pin
-#define DECAIRQ_GPIO                DW_IRQn_GPIO_Port
+#define DECAIRQ_GPIO                GPIOB
 
 #define TA_BOOT1                    GPIO_PIN_2
 #define TA_BOOT1_GPIO               GPIOB

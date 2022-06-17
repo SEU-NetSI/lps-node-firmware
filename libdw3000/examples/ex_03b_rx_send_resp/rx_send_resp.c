@@ -142,7 +142,7 @@ int rx_send_resp(void)
             }
 
             /* TESTING BREAKPOINT LOCATION #1 */
-
+            test_run_info((unsigned char *) rx_buffer);
             /* Clear good RX frame event in the DW IC status register. */
             dwt_write32bitreg(SYS_STATUS_ID, SYS_STATUS_RXFCG_BIT_MASK);
 

@@ -11,10 +11,12 @@
  * @author DecaWave
  */
 
-#include <port_dw3000.h>
-//#include <stm32f1xx_hal_conf.h>
+#include "port_dw3000.h"
+// #include <stm32f1xx_hal_conf.h>
 #include <usbd_cdc_if.h>
+#include "deca_device_api.h"
 
+extern void test_run_info(unsigned char *data);
 /****************************************************************************//**
  *
  *                              APP global variables
@@ -147,23 +149,10 @@ ITStatus EXTI_GetITEnStatus(IRQn_Type IRQn)
 
 void reset_DWIC(void)
 {
-    GPIO_InitTypeDef    GPIO_InitStruct;
-
-    // Enable GPIO used for DW1000 reset as open collector output
-    GPIO_InitStruct.Pin = DW_RESET_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_GPIO_Init(DW_RESET_GPIO_Port, &GPIO_InitStruct);
-
-    //drive the RSTn pin low
-    HAL_GPIO_WritePin(DW_RESET_GPIO_Port, DW_RESET_Pin, GPIO_PIN_RESET);
-
-    usleep(1);
-
-    //put the pin back to output open-drain (not active)
-    setup_DWICRSTnIRQ(0);
-    Sleep(2);
-
+    HAL_GPIO_WritePin(GPIOB, DW_RESET_Pin, 0);
+    HAL_Delay(2);
+    HAL_GPIO_WritePin(GPIOB, DW_RESET_Pin, 1);
+    NVIC_EnableIRQ(EXTI0_1_IRQn);
 }
 
 /* @fn      setup_DWICRSTnIRQ
@@ -447,36 +436,24 @@ void port_LCD_RW_clear(void)
  * @param      GPIO_Pin: Specifies the port pin connected to corresponding EXTI line.
  *             i.e. DW_RESET_Pin and DW_IRQn_Pin
  */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
-{
-    switch ( GPIO_Pin )
-    {
-//    case DW_RST_B_Pin :
-//    case DW_RST_A_Pin :
-//        {
-//            dw_rst_pin_irq_cb(); /* bare-metal signal */
-//            break;
-//        }
-//
-    case DW_RESET_Pin :
-        signalResetDone = 1;
-        break;
+// void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+// {
+//     test_run_info((unsigned char *)"HAL_GPIO_EXTI_Callback");
 
-    case DW_IRQn_Pin :
-        {
-            //while (HAL_GPIO_ReadPin(DECAIRQ_GPIO, DW_IRQn_Pin) == GPIO_PIN_SET)
-            {
-                process_deca_irq();
-                //dwt_isr();
-            }
-
-            break;
-        }
-
-    default :
-        break;
-    }
-}
+//     switch (GPIO_Pin)
+//     {
+//     case GPIO_PIN_0:
+//         // process_deca_irq();
+//         while(port_CheckEXT_IRQ() != 0)
+//         {
+//             dwt_isr();
+//         }
+//         HAL_NVIC_ClearPendingIRQ(EXTI0_1_IRQn);
+//         break;
+//     default:
+//         break;
+//     }
+// }
 
 /* @fn      process_deca_irq
  * @brief   main call-back for processing of DW3000 IRQ
@@ -680,17 +657,17 @@ HAL_StatusTypeDef flush_report_buff(void)
 void port_set_dwic_isr(port_dwic_isr_t dwic_isr)
 {
     /* Check DW IC IRQ activation status. */
-    ITStatus en = port_GetEXT_IRQStatus();
+    // ITStatus en = port_GetEXT_IRQStatus();
 
     /* If needed, deactivate DW IC IRQ during the installation of the new handler. */
-    port_DisableEXT_IRQ();
+    // port_DisableEXT_IRQ();
 
     port_dwic_isr = dwic_isr;
 
-    if (!en)
-    {
-        port_EnableEXT_IRQ();
-    }
+    // if (!en)
+    // {
+    //     port_EnableEXT_IRQ();
+    // }
 }
 
 
