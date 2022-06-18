@@ -37,6 +37,8 @@ void uwbInit()
 
     /* Configure the TX spectrum parameters (power, PG delay and PG count) */
     dwt_configuretxrf(&txconfig_options);
+    /* auto re-enable receiver After a frame reception failure (except a frame wait timeout), the receiver will re-enable to re-attempt reception.*/
+    dwt_or32bitoffsetreg(SYS_CFG_ID, 0, SYS_CFG_RXAUTR_BIT_MASK);
     dwt_setrxtimeout(500000);
 
     dwt_setcallbacks(&tx_cb, &rx_cb, &rx_to_cb, &rx_err_cb, NULL, NULL);
